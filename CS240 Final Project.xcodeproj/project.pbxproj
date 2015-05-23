@@ -25,6 +25,7 @@
 /* Begin PBXFileReference section */
 		C1E88D7E1B10FEBC00168D1B /* CS240 Final Project */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "CS240 Final Project"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C1E88D811B10FEBC00168D1B /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		C1E88D8A1B10FFA000168D1B /* dragonDB.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dragonDB.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,9 +58,26 @@
 		C1E88D801B10FEBC00168D1B /* CS240 Final Project */ = {
 			isa = PBXGroup;
 			children = (
+				C1E88D891B10FF8400168D1B /* src */,
+				C1E88D881B10FF7B00168D1B /* include */,
 				C1E88D811B10FEBC00168D1B /* main.cpp */,
 			);
 			path = "CS240 Final Project";
+			sourceTree = "<group>";
+		};
+		C1E88D881B10FF7B00168D1B /* include */ = {
+			isa = PBXGroup;
+			children = (
+				C1E88D8A1B10FFA000168D1B /* dragonDB.h */,
+			);
+			name = include;
+			sourceTree = "<group>";
+		};
+		C1E88D891B10FF8400168D1B /* src */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = src;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
