@@ -7,3 +7,31 @@
 //
 
 #include <stdio.h>
+#include "dragonDB.h"
+
+using namespace std;
+    
+    
+/* Opens up a new instantiation of the dragonDB main structures.
+ * The filename passed in is in reference to a persisted db that
+ * stored somewhere on disk. If it doesn't already exist on disk,
+ * we initialize a new store with that name. 
+ *
+ * @param filename name for the persistence file
+ */
+ 
+dragon_db* dragon_db::db_open(string filename){
+    
+    return NULL;
+}
+
+
+
+
+
+
+
+
+
+
+
