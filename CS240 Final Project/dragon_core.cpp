@@ -21,14 +21,15 @@ using namespace std;
  * partitioning of our hashmap into <n> on-memory buffered segments. There
  * is a one-to-one correspondence between segments and cores.
  *
- * Each core also has its own set of <n> "mailboxes". Each mailbox is a
- * queue of "packages" (i.e. key-value pairs instantiated by a "put"
- * request) that is destined for a particular segment (as determined by
- * the to-core hash). Other cores will then periodically check the mailbox
- * that corresponds to their ID, and handle the put request for packages
- * destined to their dragon_segment. This effectively allows a core
- * to queue data packages destined for segments belonging to another core
- * without compromising scalability.
+ * Each core also has its own "mailbox" consisting of  <n> "slots". Each 
+ * slot is a queue of "packages" (i.e. KV pairs instantiated by a "put"
+ * request) destined for the segment belonging to the owner (determined by
+ * the to-core hash). The slots are indexed by core id. Put requests on 
+ * other cores that get hashed to dragon_segment will then be queued on
+ * the slot corresponding to the core sending the request. The owner core
+ * will then periodically check the mailbox to handle all queued requests.
+ * This effectively allows a core to queue data packages destined for
+ * segments belonging to another core without compromising scalability.
  *
  * Note: the above queueing only applies if the user specifies that
  * eventual consistency is acceptable for our key-value store. If strong
