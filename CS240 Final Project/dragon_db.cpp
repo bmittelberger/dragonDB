@@ -19,11 +19,58 @@ using namespace std;
  *
  * @param filename name for the persistence file
  */
- 
 dragon_db* dragon_db::db_open(string filename){
     
+    //TODO: IMPLEMENT THIS FN
     return NULL;
 }
+
+
+/* Abstracted put function for the database, each application will interact
+ * with this exposed function, adding its own key and value. Returns true
+ * on success and false on failure
+ *
+ * @param key string as key for the k/v store
+ * @param value string as value for the k/v store
+ */
+bool dragon_db::db_put(string key, string value){
+    
+    //TODO: IMPLEMENT THIS FN
+    return 0;
+}
+
+/* Abstracted put function for the database, each application will interact
+ * with this exposed function, adding its own key and value. Returns the value
+ * if it is in the store, or the empty string if it is not found 
+ *
+ * @param key string as key for the k/v store
+ */
+string dragon_db::db_get(string key){
+    
+    //TODO: IMPLEMENT THIS FN
+    return "";
+}
+
+
+/* Closes the dragon db, and flushes all buffered stores to disk. Also
+ * frees all memory used by the library. Called when user no longer 
+ * needs to use the db. 
+ */
+void dragon_db::close(){
+    
+    //TODO: IMPLEMENT THIS FN
+}
+
+/* Sets the consistency value for the database. If true, then all puts
+ * and gets on any core will be immediately available to any other thread
+ * that also has access to the db. If false, then we guarantee eventual
+ * consistency, but not immediate. False will scale better because it doesn't
+ * require serialized consistency.
+ */
+void set_consistency(bool on){
+    //TODO: IMPLEMENT THIS FN
+}
+
 
 
 

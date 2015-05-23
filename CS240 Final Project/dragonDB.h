@@ -33,7 +33,7 @@ public:
 
 //the data put into another core's queue
 //if not hashed to own segment
-struct transfer_data {
+struct package {
     pair<string,string> key_val; //actual k/v data
     uint64_t timestamp;
 };
@@ -44,17 +44,16 @@ private:
     int core_id;
     int num_cores;
     int num_entries;
-    uint64_t disk_flush_timer; //indicates when we flush to disk
-    uint64_t mailbox_timer; //indicates when we should check mailboxes
+    uint64_t disk_flush_last_done; //indicates when we last flushed to disk
+    uint64_t mailbox_last_checked; //indicates when we last checked mailboxes
     uint64_t mailbox_rate; //interval between mailbox checking
     bool consistent;
-    vector<queue<transfer_data> >data_qs;
+    vector< queue<transfer_data> > mailboxes;
     
     int find_core(string key); //hashes incoming key to find which segment it should go to
     
 public:
-    dragon_core* init();
-    dragon_core* load(string filename);
+    dragon_core(string filename);
     int put(string key, string value);
     string get(string key);
     void set_consistency(bool on);
@@ -75,7 +74,7 @@ public:
     //load persisted key/val store from disk
     //if filename is empty, init a new k/v store
     dragon_db* db_open(string filename);
-    int db_put(string key, string value);
+    bool db_put(string key, string value);
     string db_get(string key);
     void close();
     
