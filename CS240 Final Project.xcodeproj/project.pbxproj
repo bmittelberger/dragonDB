@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		466DC97B1B1125E6007C0A9F /* dragon_segment.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 466DC97A1B1125E6007C0A9F /* dragon_segment.cpp */; };
 		C1E88D821B10FEBC00168D1B /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C1E88D811B10FEBC00168D1B /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -23,6 +24,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		466DC97A1B1125E6007C0A9F /* dragon_segment.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dragon_segment.cpp; sourceTree = "<group>"; };
 		C1E88D7E1B10FEBC00168D1B /* CS240 Final Project */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "CS240 Final Project"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C1E88D811B10FEBC00168D1B /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		C1E88D8A1B10FFA000168D1B /* dragonDB.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dragonDB.h; sourceTree = "<group>"; };
@@ -76,6 +78,7 @@
 		C1E88D891B10FF8400168D1B /* src */ = {
 			isa = PBXGroup;
 			children = (
+				466DC97A1B1125E6007C0A9F /* dragon_segment.cpp */,
 			);
 			name = src;
 			sourceTree = "<group>";
@@ -136,6 +139,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				466DC97B1B1125E6007C0A9F /* dragon_segment.cpp in Sources */,
 				C1E88D821B10FEBC00168D1B /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -250,6 +254,7 @@
 				C1E88D871B10FEBC00168D1B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
