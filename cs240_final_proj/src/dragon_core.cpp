@@ -14,7 +14,6 @@
 using namespace std;
 
 /* Default variable values. */
-const bool CONSISTENCY_MODEL = false;		/* true -> strong, false -> eventual */
 const int MAILBOX_RATE = 500;						/* Mailbox checking frequency, in ms */
 
 /* Constructor: dragon_core
@@ -37,8 +36,7 @@ dragon_core::dragon_core(string filename, int num_cores, int core_id, dragon_db 
     this->db = db;
     //construct mailbox
 
-    /* Set default values for rate, consistency model. */
-    consistent = CONSISTENCY_MODEL;
+    /* Set default value for rate*/
 		mailbox_rate = MAILBOX_RATE;
     
     /* Initialize the mailboxes. */
@@ -124,10 +122,6 @@ string dragon_core::get(string key) {
 
 void dragon_core::set_flush_rate(uint64_t rate) {
     mailbox_rate = rate;
-}
-
-void dragon_core::set_consistency(bool is_strong) {
-    consistent = is_strong;
 }
 
 /* Utilizes the c++ hash type to hash the string and find the correct

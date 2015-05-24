@@ -11,6 +11,7 @@
 #include <vector>
 
 #define _GNU_SOURCE
+
 #include <pthread.h>
 #include <sched.h>
 
@@ -146,7 +147,7 @@ public:
     string db_get(string key);
     void close();
     
-    void set_consistency(bool on);
+    void set_consistency(bool is_strong);
 };
     
 

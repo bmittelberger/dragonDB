@@ -19,6 +19,14 @@ dragon_db *db;
 
 void* print_stuff(void* args) {
     printf("ID: %lu, CPU: %d\n", pthread_self(), sched_getcpu());
+    
+    /*
+    for (int i = 0; i < 26 ; i++) {
+        string key(to_string(i));
+        string value(to_string(i));
+        db->db_put(key,value);
+    }*/
+
     return 0;
 }
 
@@ -63,7 +71,7 @@ int main(int argc, const char * argv[]) {
     // insert code here...
     init(argc, argv);
 
-    db = new dragon_db("no_file.txt",1);
+    db = new dragon_db("no_file.txt",2);
     db->db_put("hello","goodbye");
     string s = db->db_get("hello");
     cout << "got " << s << " back as a result! " << endl;
