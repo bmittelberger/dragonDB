@@ -56,7 +56,7 @@ private:
     string filename; //The file that the segment will write to
     
 public:
-    dragon_segment(int core_id);
+    dragon_segment(string filename, int core_id);
     
     void put(package& p);
     segment_entry* get(string key);

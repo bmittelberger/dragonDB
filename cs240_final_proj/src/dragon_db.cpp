@@ -28,8 +28,8 @@ dragon_db::dragon_db(string filename,int num_cores) {
     this->num_cores = num_cores;
 
     for(int i = 0; i < this->num_cores; i++) {
-        dragon_core *core = new dragon_core(filename,num_cores,i,this);
-        dragon_segment *segment = new dragon_segment(i);
+        dragon_core *core = new dragon_core(filename, num_cores, i, this);
+        dragon_segment *segment = new dragon_segment(filename, i);
         map_cores[i] = core;
         map_segments[i] = segment;
     }
@@ -77,10 +77,10 @@ string dragon_db::db_get(string key) {
 }
 
 void dragon_db::flush() {
-    map<int, dragon_core*>::iterator it;
-    for (it =  map_cores.begin(); it != map_cores.end(); it++){
-        it->second->flush_mailbox();
-    }
+    dragon_core *core = map_cores[sched_getcpu()];
+    dragon_segment *segment = map_segments[sched_getcpu()];
+    core->flush_mailbox();
+    segment->flush_to_disk();
 }
 
 

@@ -41,7 +41,7 @@ void* print_stuff(void* args) {
 
 
 void init(int argc, const char *argv[]) {
-    int nc = 2;
+    int nc = 3;
     if (argc > 1) {
 	nc = atoi(argv[1]);
     } 
@@ -77,7 +77,7 @@ void init(int argc, const char *argv[]) {
 
 int main(int argc, const char * argv[]) {
     // insert code here...
-    db = new dragon_db("no_file.txt",2);
+    db = new dragon_db("no_file.txt",3);
     init(argc, argv);
 
  
