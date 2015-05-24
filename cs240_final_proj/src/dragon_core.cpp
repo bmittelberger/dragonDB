@@ -43,17 +43,18 @@ using namespace std;
  * for the persistent db, or creates the file if it doesn't exist.
  * This function also creates a new dragon_segment owned by this core.
  */
-dragon_core::dragon_core(string filename, int num_cores, int core_id) {
+dragon_core::dragon_core(string filename, int num_cores, int core_id, dragon_db *db) {
     num_entries = 0;
     disk_flush_last_done = time(0);
     mailbox_last_checked = time(0);
     this->num_cores = num_cores;
     this->core_id = core_id;
-    
+    this->db = db;
     //construct mailbox
     for(int i = 0; i < num_cores; i++ ) {
         slot s;
         s.packages = new queue<package>;
+        pthread_mutex_init(&s.mailbox_lock,NULL);
         mailbox.push_back(s);
     }
     
@@ -74,15 +75,18 @@ void dragon_core::put(string key, string value) {
     p.timestamp = time(0);
     
     if (dest_core_id == this->core_id) { //if the segment is our own, yay! just write to segment
+        
         dragon_segment* segment = db->get_segment(dest_core_id);
+        if (!segment) cout << "segment is null" << endl;
         segment->put(p);
     } else { //create a package, and send it off to another core to be put in its mailbox
         dragon_core* dest_core = db->get_core(dest_core_id);
+        if (!dest_core) cout << "core is null" << endl;
         dest_core->deliver_package(this->core_id,p);
     }
     
     if (time(0) - mailbox_last_checked > mailbox_rate) {
-        flush_mailbox();
+        //flush_mailbox();
     }
 }
 
@@ -133,6 +137,7 @@ string dragon_core::get(string key) {
 void dragon_core::set_flush_rate(uint64_t rate) {
     mailbox_rate = rate;
 }
+
 
 /* Utilizes the c++ hash type to hash the string and find the correct
  * core for this inputed key.

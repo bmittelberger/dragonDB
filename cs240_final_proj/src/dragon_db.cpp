@@ -26,16 +26,13 @@ dragon_db::dragon_db(string filename,int num_cores) {
     this->num_cores = num_cores;
 
     for(int i = 0; i < this->num_cores; i++) {
-        dragon_core *core = new dragon_core(filename,num_cores,core_id);
-        dragon_segment *segment = new dragon_segment(core_id);
-        map_cores.insert(i,core);
-        map_segments.insert(i,segment);
+        dragon_core *core = new dragon_core(filename,num_cores,i,this);
+        dragon_segment *segment = new dragon_segment(i);
+        map_cores[i] = core;
+        map_segments[i] = segment;
     }
     disk_flush_rate = DISK_FLUSH_RATE;
 
-
-
-    //TODO: IMPLEMENT THIS FN
 }
 
 
@@ -51,7 +48,10 @@ void dragon_db::db_put(string key, string value) {
     if (value == ""  || key == "") {
         return;
     }
-    //TODO: IMPLEMENT THIS FN
+    dragon_core *core = map_cores[0];
+    if (core) {
+        core->put(key,value);
+    }
 }
 
 /* Abstracted put function for the database, each application will interact
@@ -61,10 +61,22 @@ void dragon_db::db_put(string key, string value) {
  * @param key string as key for the k/v store
  */
 string dragon_db::db_get(string key) {
-    
-    //TODO: IMPLEMENT THIS FN
-    return "";
+    dragon_core *core = map_cores[0];
+    if (core){
+        string ret = core->get(key);
+        return ret;
+    }
 }
+
+dragon_segment* dragon_db::get_segment(int core_id) {
+    return map_segments[core_id];
+}
+    
+dragon_core* dragon_db::get_core(int core_id) {
+    return map_cores[core_id];
+}
+
+
 
 
 /* Closes the dragon db, and flushes all buffered stores to disk. Also

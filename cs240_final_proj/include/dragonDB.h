@@ -53,12 +53,7 @@ private:
     string filename; //The file that the segment will write to
     
 public:
-    dragon_segment(int core_id) {
-        version_number = 0;
-        this->core_id = core_id;
-        //Can only flush segments that correspond to our core
-        //int cpu = sched_getcpu();
-    }
+    dragon_segment(int core_id);
     
     void put(package& p);
     segment_entry* get(string key);
@@ -95,7 +90,7 @@ private:
     void flush_mailbox();
     
 public:
-    dragon_core(string filename, int num_cores, int core_id);
+    dragon_core(string filename, int num_cores, int core_id, dragon_db* db);
     void put(string key, string value);
     string get(string key);
     void set_flush_rate(uint64_t rate);
@@ -113,7 +108,7 @@ private:
     map<int, dragon_core*> map_cores;
     
 public:
-    
+    dragon_db(string filename, int num_cores);
     uint64_t disk_flush_rate;
     
     dragon_segment* get_segment(int core_id);
@@ -121,7 +116,7 @@ public:
     
     //load persisted key/val store from disk
     //if filename is empty, init a new k/v store
-    dragon_db* db_open(string filename);
+    
     void db_put(string key, string value);
     string db_get(string key);
     void close();

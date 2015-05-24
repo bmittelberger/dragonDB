@@ -11,6 +11,15 @@
 
 using namespace std;
     
+
+dragon_segment::dragon_segment(int core_id) {
+    version_number = 0;
+    this->core_id = core_id;
+    pthread_mutex_init(&segment_lock,NULL);
+
+
+}
+
 /* Receives a package to put into the segment store. If it exists,
  * first checks timestamp to make sure we want to replace it with
  * the inputted value. If we want to replace (meaning the inputted timestamp
@@ -20,6 +29,7 @@ using namespace std;
  * @param p package struct that contains info for timestamp and key/value
  */
 void dragon_segment::put(package& p) {
+
     segment_entry *old_entry = get(p.contents.first);
     if (old_entry && old_entry->timestamp > p.timestamp) {
         return;
@@ -33,6 +43,7 @@ void dragon_segment::put(package& p) {
     if (old_entry) {
         delete old_entry;
     }
+
 };
 
 /* Gets a segment entry out of the segment's store. Uses no locks,
