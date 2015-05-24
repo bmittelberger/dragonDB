@@ -5,7 +5,11 @@
 	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
 	<false/>
 	<key>IDESourceControlProjectIdentifier</key>
+<<<<<<< HEAD
 	<string>BC7C2385-8165-4C10-B06A-BEA2F412EE89</string>
+=======
+	<string>8AF63FDC-9BD7-415E-A379-2FAC90241F88</string>
+>>>>>>> f610f7dd2bf4981ac2dd539edceb56cea1cf2bca
 	<key>IDESourceControlProjectName</key>
 	<string>CS240 Final Project</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
@@ -34,7 +38,11 @@
 			<key>IDESourceControlWCCIdentifierKey</key>
 			<string>DE96452D5A3F5CB1DEF2EB69F3F937262B29445A</string>
 			<key>IDESourceControlWCCName</key>
+<<<<<<< HEAD
 			<string>dragonDB</string>
+=======
+			<string>CS240%20Final%20Project</string>
+>>>>>>> f610f7dd2bf4981ac2dd539edceb56cea1cf2bca
 		</dict>
 	</array>
 </dict>
