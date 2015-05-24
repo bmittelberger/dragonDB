@@ -32,18 +32,20 @@ void dragon_segment::put(package& p) {
 
     segment_entry *old_entry = get(p.contents.first);
     if (old_entry && old_entry->timestamp > p.timestamp) {
+      
         return;
     }
     
     segment_entry* entry = new segment_entry;
     entry->value = p.contents.second;
     entry->timestamp = p.timestamp;
+    pthread_mutex_lock(&segment_lock);
     store[p.contents.first] = entry;
+    pthread_mutex_unlock(&segment_lock);
     
     if (old_entry) {
         delete old_entry;
     }
-
 };
 
 /* Gets a segment entry out of the segment's store. Uses no locks,

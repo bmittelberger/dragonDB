@@ -115,7 +115,6 @@ private:
     
     hash<string> hasher;
     int map_to_core(string key); //hashes key to find which segment it should go to
-    void flush_mailbox();
     
 public:
     dragon_core(string filename, int num_cores, int core_id, dragon_db* db);
@@ -125,6 +124,7 @@ public:
     void set_flush_rate(uint64_t rate);
     void send_package(package p);
     void deliver_package(int slot_num, package& package);
+    void flush_mailbox();
     
 };
 
@@ -143,8 +143,7 @@ public:
     dragon_segment* get_segment(int core_id);
     dragon_core* get_core(int core_id);
     
-    //load persisted key/val store from disk
-    //if filename is empty, init a new k/v store
+    void flush();
     
     void db_put(string key, string value);
     string db_get(string key);

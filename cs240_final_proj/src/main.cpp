@@ -26,6 +26,14 @@ void* print_stuff(void* args) {
         string value(to_string(i));
         db->db_put(key,value);
     }
+    db->flush();
+
+    for (int i = 0; i < 26 ; i++) {
+        string key(to_string(i));
+        string val = db->db_get(key);
+        cout << "for string " << key << ", got value " << val << endl;
+    }
+
 
     return 0;
 }

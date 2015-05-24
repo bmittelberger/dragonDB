@@ -84,12 +84,16 @@ void dragon_core::put(string key, string value) {
     
     /* If the segment is owned locally, perform the put. */
     if (dest_core_id == this->core_id) { 
+
+        cout << "own core!" << endl;
         dragon_segment* segment = db->get_segment(dest_core_id);
         if (!segment) cout << "segment is null" << endl;
         segment->put(p);
 
     /* If the segment is owned by another core, queue the package. */
     } else { 
+
+        cout << "delivering package to core " << dest_core_id << endl;
         dragon_core* dest_core = db->get_core(dest_core_id);
         if (!dest_core) cout << "core is null" << endl;
         dest_core->deliver_package(this->core_id, p);
@@ -97,7 +101,7 @@ void dragon_core::put(string key, string value) {
     
     /* Flush the local core's mailbox periodically. */
     if (time(0) - mailbox_last_checked > mailbox_rate) {
-        //flush_mailbox();
+        flush_mailbox();
     }
 }
 
@@ -140,6 +144,7 @@ string dragon_core::get(string key) {
 void dragon_core::flush_mailbox() {
     dragon_segment* segment = db->get_segment(core_id);
 
+    cout << "flushing mailbox for core" << core_id << endl;
     /* Loop through the slots (except our own, which should be empty). */
     for (int i = 0; i < mailbox.size(); i++) {
         if (i == core_id)

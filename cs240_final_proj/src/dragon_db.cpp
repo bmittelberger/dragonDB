@@ -76,6 +76,14 @@ string dragon_db::db_get(string key) {
     }
 }
 
+void dragon_db::flush() {
+    map<int, dragon_core*>::iterator it;
+    for (it =  map_cores.begin(); it != map_cores.end(); it++){
+        it->second->flush_mailbox();
+    }
+}
+
+
 dragon_segment* dragon_db::get_segment(int core_id) {
     return map_segments[core_id];
 }
@@ -83,8 +91,6 @@ dragon_segment* dragon_db::get_segment(int core_id) {
 dragon_core* dragon_db::get_core(int core_id) {
     return map_cores[core_id];
 }
-
-
 
 
 /* Closes the dragon db, and flushes all buffered stores to disk. Also
@@ -95,6 +101,7 @@ void dragon_db::close() {
     
     //TODO: IMPLEMENT THIS FN
 }
+
 
 /* Sets the consistency value for the database. If true, then all puts
  * and gets on any core will be immediately available to any other thread
