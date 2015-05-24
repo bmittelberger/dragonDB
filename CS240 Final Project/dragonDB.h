@@ -5,14 +5,25 @@
 //  Created by Ben Mittelberger on 5/23/15.
 //  Copyright (c) 2015 cs240. All rights reserved.
 //
+
+
 #include <map>
 #include <vector>
+#define _GNU_SOURCE
 #include <sched.h>
+
+#include "mach/thread_policy.h"
+
+#include <thread>
+
+#include <stdlib.h>
 #include <queue>
 #include <string>
 #include <iostream>
+#include <stdio.h>
 
-namespace std{
+
+using namespace std;
     
 #ifndef CS240_Final_Project_dragonDB_h
 #define CS240_Final_Project_dragonDB_h
@@ -22,11 +33,22 @@ private:
     map<string, string> segment;
     int version_number;
     mutex segment_lock; //used if consistency is required
+    string filename; //The file that the segment will write to
     
 public:
-    int put(string key, string value);
-    string get(string key);
-    int flush_to_disk();
+    dragon_segment() {
+        version_number = 0;
+    
+        //Can only flush segments that correspond to our core
+        //int cpu = sched_getcpu();
+        
+        
+    }
+    
+    int put(string key, string value); //For HM
+    string get(string key); //For HM
+    int flush_to_disk(); //Flushing seg to FS
+    int load_from_disk(); //For loading from FS
     void lock_segment();
     void unlock_segment();
 };
@@ -53,7 +75,7 @@ private:
     int find_core(string key); //hashes incoming key to find which segment it should go to
     
 public:
-    dragon_core* init();
+    dragon_core* init_core();
     dragon_core* load(string filename);
     int put(string key, string value);
     string get(string key);
@@ -82,7 +104,5 @@ public:
     void set_consistency(bool on);
 };
     
-    
-} //end of std namespace
 
 #endif

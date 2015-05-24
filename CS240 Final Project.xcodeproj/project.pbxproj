@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		466DC97B1B1125E6007C0A9F /* dragon_segment.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 466DC97A1B1125E6007C0A9F /* dragon_segment.cpp */; };
+		466DC97E1B11267A007C0A9F /* dragon_core.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 466DC97C1B11267A007C0A9F /* dragon_core.cpp */; };
+		466DC97F1B11267A007C0A9F /* dragon_db.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 466DC97D1B11267A007C0A9F /* dragon_db.cpp */; };
 		C1E88D821B10FEBC00168D1B /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C1E88D811B10FEBC00168D1B /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -25,6 +27,8 @@
 
 /* Begin PBXFileReference section */
 		466DC97A1B1125E6007C0A9F /* dragon_segment.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dragon_segment.cpp; sourceTree = "<group>"; };
+		466DC97C1B11267A007C0A9F /* dragon_core.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dragon_core.cpp; sourceTree = "<group>"; };
+		466DC97D1B11267A007C0A9F /* dragon_db.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dragon_db.cpp; sourceTree = "<group>"; };
 		C1E88D7E1B10FEBC00168D1B /* CS240 Final Project */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "CS240 Final Project"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C1E88D811B10FEBC00168D1B /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		C1E88D8A1B10FFA000168D1B /* dragonDB.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dragonDB.h; sourceTree = "<group>"; };
@@ -79,6 +83,8 @@
 			isa = PBXGroup;
 			children = (
 				466DC97A1B1125E6007C0A9F /* dragon_segment.cpp */,
+				466DC97C1B11267A007C0A9F /* dragon_core.cpp */,
+				466DC97D1B11267A007C0A9F /* dragon_db.cpp */,
 			);
 			name = src;
 			sourceTree = "<group>";
@@ -139,7 +145,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				466DC97E1B11267A007C0A9F /* dragon_core.cpp in Sources */,
 				466DC97B1B1125E6007C0A9F /* dragon_segment.cpp in Sources */,
+				466DC97F1B11267A007C0A9F /* dragon_db.cpp in Sources */,
 				C1E88D821B10FEBC00168D1B /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
