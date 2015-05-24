@@ -14,7 +14,6 @@
 using namespace std;
 
 /* Default variable values. */
-const bool CONSISTENCY_MODEL = false;       /* true -> strong, false -> eventual */
 const int MAILBOX_RATE = 500;               /* Mailbox checking frequency, in ms */
 
 /* Constructor: dragon_core
@@ -38,8 +37,7 @@ dragon_core::dragon_core(string filename, int num_cores, int core_id, dragon_db 
     this->core_id = core_id;
     this->db = db;
 
-    /* Set default values for rate, consistency model. */
-    consistent = CONSISTENCY_MODEL;
+    /* Set default value for mailbox rate. */
     mailbox_rate = MAILBOX_RATE;
     
     /* Initialize the mailboxes. */
@@ -94,7 +92,7 @@ void dragon_core::put(string key, string value) {
     } else { 
         dragon_core* dest_core = db->get_core(dest_core_id);
         if (!dest_core) cout << "core is null" << endl;
-        dest_core->deliver_package(this->core_id,p);
+        dest_core->deliver_package(this->core_id, p);
     }
     
     /* Flush the local core's mailbox periodically. */
@@ -129,30 +127,50 @@ string dragon_core::get(string key) {
     }
 }
 
+/* Function: dragon_core::flush_mailbox
+ *
+ * Flushes the local core's mailbox (which contains packages inserted
+ * by other cores) and processes each package as a put request. This
+ * implementation assumes that dragon_segment->put keeps the integrity
+ * of the package ordering, as specified as the package's timestamp.
+ * That is, if package "A" and "B" both refer to the same key, then
+ * the store will persist the value for the package created at a later
+ * timestamp, regardless of the order in which A and B are processed.
+ */
 void dragon_core::flush_mailbox() {
     dragon_segment* segment = db->get_segment(core_id);
+
+    /* Loop through the slots (except our own, which should be empty). */
     for (int i = 0; i < mailbox.size(); i++) {
-        if (i == core_id) {
+        if (i == core_id)
             continue;
-        }
+
         pthread_mutex_t lock = mailbox[i].mailbox_lock;
         pthread_mutex_lock(&lock);
+
+        /* Process each package in each slot. */
         queue<package> *packages = mailbox[i].packages;
         while (packages->size() > 0) {
             package p = packages->front();
             packages->pop();
             segment->put(p);
         }
+
         pthread_mutex_unlock(&lock);
     }
+
+    /* Update the last time at which the mailbox was checked. */
     mailbox_last_checked = time(0);
 }
 
-/* Go to another core and deliver the package to its mailbox. Must 
- * synchronize access with a mutex.
+/* Function: dragon_core::deliver_package
+ * 
+ * Delivers a package to another core's mailbox, stored in the slot
+ * set aside for the local core. Note that this function is called
+ * on the core of the receiving core. 
  *
  * @param slot_num the number for the slot to deliver to
- * @param pacakge the package itself to add
+ * @param pacakge the package to add
  */
 void dragon_core::deliver_package(int slot_num, package &package) {
     pthread_mutex_t lock = mailbox[slot_num].mailbox_lock;
@@ -165,16 +183,12 @@ void dragon_core::set_flush_rate(uint64_t rate) {
     mailbox_rate = rate;
 }
 
-void dragon_core::set_consistency(bool is_strong) {
-    consistent = is_strong;
-}
-
 /* Utilizes the c++ hash type to hash the string and find the correct
- * core for this inputed key.
+ * core for this inputed key. This function assumes that the core
+ * ID's are unique, 0-indexed integers that increase incrementally. 
  *
  * @param key for finding the correct core
 */
 int dragon_core::map_to_core(string key) {
-    return hasher(key)%num_cores;
-    //TODO assuming thread_ids range from 0 to n-1 -- must make sure
+    return hasher(key) % num_cores;
 }
