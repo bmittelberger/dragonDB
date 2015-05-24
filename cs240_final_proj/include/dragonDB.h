@@ -10,6 +10,7 @@
 #include <map>
 #include <vector>
 
+#define _GNU_SOURCE
 #include <pthread.h>
 #include <sched.h>
 

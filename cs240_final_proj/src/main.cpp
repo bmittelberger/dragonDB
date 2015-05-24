@@ -25,7 +25,6 @@ int specify_how_many_cores() {
 
 
 void* print_stuff(void* args) {
-    printf("Inside print_stuff\n");
     printf("ID: %lu, CPU: %d\n", pthread_self(), sched_getcpu());
     return 0;
 }
@@ -40,20 +39,19 @@ int main(int argc, const char * argv[]) {
     
     //Create threads for each core
     pthread_t threads[num_cores];
-
-    pthread_attr_t attr;
     cpu_set_t cpus;
-    pthread_attr_init(&attr);
 
     for (int i = 0; i < num_cores; i++) {
         CPU_ZERO(&cpus);
         CPU_SET(i, &cpus);
-	printf("here\n");
-	//int res = pthread_setaffinity_np(threads[i], sizeof(cpu_set_t), &cpus);
-	string msg ("hello" + i);
-        pthread_create(&threads[i], NULL, print_stuff, reinterpret_cast<void*>(&msg));
-	printf("here2\n");
+	//pthread_setaffinity_np(threads[i], sizeof(cpu_set_t), &cpus);
+        pthread_create(&threads[i], NULL, print_stuff, NULL);
     }
+
+    for (int i = 0; i < num_cores; i++) {
+	pthread_join(threads[i], NULL);
+    }
+
     return 0;
 }
     
