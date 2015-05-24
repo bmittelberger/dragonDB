@@ -26,22 +26,26 @@ const int MAILBOX_RATE = 500;						/* Mailbox checking frequency, in ms */
  * @param filename name of the backup store on disk
  * @param num_cores total number of cores
  */
-dragon_core::dragon_core(string filename, int num_cores) {
-
-		/* Instantiate private variables. */
+dragon_core::dragon_core(string filename, int num_cores, int core_id, dragon_db *db) {
+		
+    /* Instantiate private variables. */
     num_entries = 0;
     disk_flush_last_done = time(0);
     mailbox_last_checked = time(0);
     this->num_cores = num_cores;
+    this->core_id = core_id;
+    this->db = db;
+    //construct mailbox
 
-		/* Set default values for rate, consistency model. */
+    /* Set default values for rate, consistency model. */
     consistent = CONSISTENCY_MODEL;
 		mailbox_rate = MAILBOX_RATE;
     
-		/* Initialize the mailboxes. */
+    /* Initialize the mailboxes. */
     for(int i = 0; i < num_cores; i++ ) {
         slot s; // TODO: should this be declared on the heap?
         s.packages = new queue<package>;
+        pthread_mutex_init(&s.mailbox_lock,NULL);
         mailbox.push_back(s);
     }
 }
@@ -59,15 +63,18 @@ void dragon_core::put(string key, string value) {
     p.timestamp = time(0);
     
     if (dest_core_id == this->core_id) { //if the segment is our own, yay! just write to segment
+        
         dragon_segment* segment = db->get_segment(dest_core_id);
+        if (!segment) cout << "segment is null" << endl;
         segment->put(p);
     } else { //create a package, and send it off to another core to be put in its mailbox
         dragon_core* dest_core = db->get_core(dest_core_id);
+        if (!dest_core) cout << "core is null" << endl;
         dest_core->deliver_package(this->core_id,p);
     }
     
     if (time(0) - mailbox_last_checked > mailbox_rate) {
-        flush_mailbox();
+        //flush_mailbox();
     }
 }
 
@@ -78,14 +85,15 @@ void dragon_core::flush_mailbox() {
         if (i == core_id) {
             continue;
         }
-        pthread_mutex_lock(mailbox[i].mailbox_lock);
+        pthread_mutex_t lock = mailbox[i].mailbox_lock;
+        pthread_mutex_lock(&lock);
         queue<package> *packages = mailbox[i].packages;
         while (packages->size() > 0) {
             package p = packages->front();
             packages->pop();
             segment->put(p);
         }
-        pthread_mutex_unlock(mailbox[i].mailbox_lock);
+        pthread_mutex_unlock(&lock);
     }
     mailbox_last_checked = time(0);
 }
@@ -97,9 +105,10 @@ void dragon_core::flush_mailbox() {
  * @param pacakge the package itself to add
  */
 void dragon_core::deliver_package(int slot_num, package &package) {
-    pthread_mutex_lock(mailbox[slot_num].mailbox_lock);
+    pthread_mutex_t lock = mailbox[slot_num].mailbox_lock;
+    pthread_mutex_lock(&lock);
     mailbox[slot_num].packages->push(package);
-    pthread_mutex_unlock(mailbox[slot_num].mailbox_lock);
+    pthread_mutex_unlock(&lock);
 }
 
 string dragon_core::get(string key) {

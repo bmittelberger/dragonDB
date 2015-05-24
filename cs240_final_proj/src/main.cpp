@@ -16,6 +16,7 @@
 
 using namespace std;
 
+dragon_db *db;
 
 void* print_stuff(void* args) {
     printf("ID: %lu, CPU: %d\n", pthread_self(), sched_getcpu());
@@ -67,6 +68,15 @@ int main(int argc, const char * argv[]) {
 
     // START READING REQUESTS TO THE DB
     
+
+    db = new dragon_db("no_file.txt",1);
+    db->db_put("hello","goodbye");
+    string s = db->db_get("hello");
+    cout << "got " << s << " back as a result! " << endl;
+
+
+
+
 
     return 0;
 }

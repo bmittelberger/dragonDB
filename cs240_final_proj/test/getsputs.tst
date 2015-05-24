@@ -1,4 +1,4 @@
-open new_dragon_store
+open dragon_store
 get BADKEY
 puts BADKEY 123
 get armor
