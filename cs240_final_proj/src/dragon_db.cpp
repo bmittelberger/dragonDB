@@ -47,7 +47,6 @@ dragon_db::dragon_db(string filename,int num_cores) {
  */
 void dragon_db::db_put(string key, string value) {
     
-    cout << "putting on core " << sched_getcpu() << endl;
 
     if (value == ""  || key == "") {
         return;
@@ -68,7 +67,6 @@ void dragon_db::db_put(string key, string value) {
  */
 string dragon_db::db_get(string key) {
 
-    cout << "getting on core " << sched_getcpu() << endl;
     dragon_core *core = map_cores[sched_getcpu()];
     if (core){
         string ret = core->get(key);
