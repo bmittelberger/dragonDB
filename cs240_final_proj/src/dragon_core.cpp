@@ -43,37 +43,93 @@ using namespace std;
  * for the persistent db, or creates the file if it doesn't exist.
  * This function also creates a new dragon_segment owned by this core.
  */
-dragon_core::dragon_core(string filename) {
+dragon_core::dragon_core(string filename, int num_cores) {
+    num_entries = 0;
+    disk_flush_last_done = time(0);
+    mailbox_last_checked = time(0);
+    this->num_cores = num_cores;
+    consistent = false; //default value
+    
+    //construct mailbox
+    for(int i = 0; i < num_cores; i++ ) {
+        slot s;
+        s.packages = new queue<package>;
+        mailbox.push_back(s);
+    }
+    
     //TODO: IMPLEMENT THIS FN
 }
 
 
 /* First attempts to put it into our own segment if it hashes to us, 
- * otherwise, we package it and send it to another thread's mailbox */
-bool dragon_core::put(string key, string value) {
-    int correct_core = find_core(key);
-    if (correct_core == this->core_id){ //if the segment is our own, yay! just write to segment
-        dragon_segment* segment = db->get_segment(correct_core);
-        return segment->put(key,value);
+ * otherwise, we package it and send it to another thread's mailbox 
+ *
+ * @param key as the string key for the k/v
+ * @param value as the string value for the k/v
+ */
+void dragon_core::put(string key, string value) {
+    int dest_core_id = find_core(key);
+    package p;
+    p.contents = pair<string,string>(key,value);
+    p.timestamp = time(0);
+    
+    if (dest_core_id == this->core_id) { //if the segment is our own, yay! just write to segment
+        dragon_segment* segment = db->get_segment(dest_core_id);
+        segment->put(p);
     } else { //create a package, and send it off to another core to be put in its mailbox
-        pair<string,string> package_contents(key,value);
-        package new_package;
-        new_package.timestamp = time(0);
-        new_package.contents = package_contents;
-        dragon_core* dest_core = db->get_core(correct_core);
-        dest_core->deliver_package(this->core_id,new_package);
+        dragon_core* dest_core = db->get_core(dest_core_id);
+        dest_core->deliver_package(this->core_id,p);
     }
-    //TODO: figure out flushing our own mailbox
-    return true;
+    
+    if (time(0) - mailbox_last_checked > mailbox_rate) {
+        flush_mailbox();
+    }
 }
 
 
-void dragon_core::deliver_package(int slot_num, package &package){
-    mailbox[slot_num].packages.push(package);
+void dragon_core::flush_mailbox() {
+    dragon_segment* segment = db->get_segment(core_id);
+    for (int i = 0; i < mailbox.size(); i++) {
+        if (i == core_id) {
+            continue;
+        }
+        mailbox[i].mailbox_lock.lock();
+        queue<package> *packages = mailbox[i].packages;
+        while (packages->size() > 0) {
+            package p = packages->front();
+            packages->pop();
+            segment->put(p);
+        }
+        mailbox[i].mailbox_lock.unlock();
+    }
+    mailbox_last_checked = time(0);
 }
 
-string dragon_core::get(string key){
-    return "";
+/* Go to another core and deliver the package to its mailbox. Must 
+ * synchronize access with a mutex.
+ *
+ * @param slot_num the number for the slot to deliver to
+ * @param pacakge the package itself to add
+ */
+void dragon_core::deliver_package(int slot_num, package &package) {
+    mailbox[slot_num].mailbox_lock.lock();
+    mailbox[slot_num].packages->push(package);
+    mailbox[slot_num].mailbox_lock.unlock();
+}
+
+string dragon_core::get(string key) {
+    int dest_core = find_core(key);
+    dragon_segment* segment = db->get_segment(dest_core);
+    segment_entry* entry = segment->get(key);
+    if (!entry) {
+        return "";
+    } else {
+        return entry->value;
+    }
+}
+
+void dragon_core::set_flush_rate(uint64_t rate) {
+    mailbox_rate = rate;
 }
 
 void dragon_core::set_consistency(bool on) {

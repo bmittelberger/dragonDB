@@ -37,9 +37,16 @@ struct segment_entry{
     uint64_t timestamp;
 };
     
+//the data put into another core's queue
+//if not hashed to own segment
+struct package {
+    pair<string,string> contents; //actual k/v data
+    uint64_t timestamp;
+};
+    
 class dragon_segment {
 private:
-    map<string, segment_entry> segment;
+    map<string, segment_entry*> store;
     int version_number;
     pthread_mutex_t segment_lock; //used if consistency is required
     string filename; //The file that the segment will write to
@@ -47,33 +54,24 @@ private:
 public:
     dragon_segment() {
         version_number = 0;
-    
         //Can only flush segments that correspond to our core
         //int cpu = sched_getcpu();
-        
-        
     }
     
-    int put(string key, string value); //For HM
-    string get(string key); //For HM
-    int flush_to_disk(); //Flushing seg to FS
-    int load_from_disk(); //For loading from FS
+    void put(package& p);
+    segment_entry* get(string key);
+    int flush_to_disk();
     void lock_segment();
     void unlock_segment();
 };
 
-//the data put into another core's queue
-//if not hashed to own segment
-struct package {
-    pair<string,string> contents; //actual k/v data
-    uint64_t timestamp;
-};
+
 
 // struct for each core to place info in
 // another core's mailbox -- lock is only
 // used if strict consistency is turned on
 struct slot {
-    queue< package > packages;
+    queue< package > *packages;
     pthread_mutex_t mailbox_lock;
 };
 
@@ -93,12 +91,14 @@ private:
     
     hash<string> hasher;
     int find_core(string key); //hashes incoming key to find which segment it should go to
+    void flush_mailbox();
     
 public:
-    dragon_core(string filename);
-    bool put(string key, string value);
+    dragon_core(string filename, int num_cores);
+    void put(string key, string value);
     string get(string key);
     void set_consistency(bool on);
+    void set_flush_rate(uint64_t rate);
     void send_package(package p);
     void deliver_package(int slot_num, package& package);
     
@@ -123,7 +123,7 @@ public:
     //load persisted key/val store from disk
     //if filename is empty, init a new k/v store
     dragon_db* db_open(string filename);
-    bool db_put(string key, string value);
+    void db_put(string key, string value);
     string db_get(string key);
     void close();
     

@@ -19,7 +19,7 @@ using namespace std;
  *
  * @param filename name for the persistence file
  */
-dragon_db* dragon_db::db_open(string filename){
+dragon_db* dragon_db::db_open(string filename) {
     
     
     //TODO: IMPLEMENT THIS FN
@@ -34,10 +34,12 @@ dragon_db* dragon_db::db_open(string filename){
  * @param key string as key for the k/v store
  * @param value string as value for the k/v store
  */
-bool dragon_db::db_put(string key, string value){
+void dragon_db::db_put(string key, string value) {
     
+    if (value == ""  || key == "") {
+        return;
+    }
     //TODO: IMPLEMENT THIS FN
-    return 0;
 }
 
 /* Abstracted put function for the database, each application will interact
@@ -46,7 +48,7 @@ bool dragon_db::db_put(string key, string value){
  *
  * @param key string as key for the k/v store
  */
-string dragon_db::db_get(string key){
+string dragon_db::db_get(string key) {
     
     //TODO: IMPLEMENT THIS FN
     return "";
@@ -57,7 +59,7 @@ string dragon_db::db_get(string key){
  * frees all memory used by the library. Called when user no longer 
  * needs to use the db. 
  */
-void dragon_db::close(){
+void dragon_db::close() {
     
     //TODO: IMPLEMENT THIS FN
 }
@@ -68,7 +70,7 @@ void dragon_db::close(){
  * consistency, but not immediate. False will scale better because it doesn't
  * require serialized consistency.
  */
-void set_consistency(bool on){
+void set_consistency(bool on) {
     //TODO: IMPLEMENT THIS FN
 }
 
