@@ -5,15 +5,24 @@
 //  Created by Ben Mittelberger on 5/23/15.
 //  Copyright (c) 2015 cs240. All rights reserved.
 //
+
+
 #include <map>
 #include <vector>
+
+#define _GNU_SOURCE
+#include <pthread.h>
 #include <sched.h>
+
+#include <stdlib.h>
 #include <queue>
 #include <string>
 #include <iostream>
+#include <stdio.h>
+
 #include <time.h>
 
-namespace std{
+using namespace std;
     
 #ifndef CS240_Final_Project_dragonDB_h
 #define CS240_Final_Project_dragonDB_h
@@ -39,11 +48,11 @@ class dragon_segment {
 private:
     map<string, segment_entry*> store;
     int version_number;
-    mutex segment_lock; //used if consistency is required
+    pthread_mutex_t segment_lock; //used if consistency is required
+    string filename; //The file that the segment will write to
     
 public:
     dragon_segment() {
-        
         version_number = 0;
         //Can only flush segments that correspond to our core
         //int cpu = sched_getcpu();
@@ -63,7 +72,7 @@ public:
 // used if strict consistency is turned on
 struct slot {
     queue< package > *packages;
-    mutex mailbox_lock;
+    pthread_mutex_t mailbox_lock;
 };
 
 class dragon_core {
@@ -121,7 +130,5 @@ public:
     void set_consistency(bool on);
 };
     
-    
-} //end of std namespace
 
 #endif
