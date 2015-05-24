@@ -1,6 +1,8 @@
 
+SRC_FILES = src/*
+
 all:
-	g++ -std=gnu++11 src/main.cpp -o dragonDB -lpthread
+	g++ -std=gnu++11 $(SRC_FILES) -o dragonDB -lpthread
 
 
 clean: 
