@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 
+
 using namespace std;
 
 
@@ -23,7 +24,11 @@ void* print_stuff(void* args) {
 
 
 
-void init(int argc, const char *argv[]) {
+
+
+
+int main(int argc, const char * argv[]) {
+    // INITIALIZATION 
     int nc = 2;
     if (argc > 1) {
 	nc = atoi(argv[1]);
@@ -37,29 +42,31 @@ void init(int argc, const char *argv[]) {
     
     //Create threads for each core
     pthread_t threads[num_cores];
-    
+    int cores_used[num_cores];
     pthread_attr_t attr;
     cpu_set_t cpus;
     pthread_attr_init(&attr);
 
+    //While threads being initialized, their cores are set to busy
     for (int i = 0; i < num_cores; i++) {
         CPU_ZERO(&cpus);
         CPU_SET(i, &cpus);
 	pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpus);
+	cores_used[i] = 1;
         pthread_create(&threads[i], &attr, print_stuff, NULL);
     }
 
     for (int i = 0; i < num_cores; i++) {
 	pthread_join(threads[i], NULL);
     }
-}
 
+    //Cores not in use any more
+    for (int i = 0; i < num_cores; i++) {
+	cores_used[i] = 0;
+    }
 
-
-
-int main(int argc, const char * argv[]) {
-    // insert code here...
-    init(argc, argv);
+    // START READING REQUESTS TO THE DB
+    
 
     return 0;
 }
