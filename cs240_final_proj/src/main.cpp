@@ -15,13 +15,6 @@
 
 using namespace std;
 
-int specify_how_many_cores() {
-    long nc = sysconf(_SC_NPROCESSORS_ONLN);
-    cout << "You have " << nc << " cores. How many cores would you like to use?\n";
-    cin >> nc;
-    return nc;
-}
-
 
 void* print_stuff(void* args) {
     printf("ID: %lu, CPU: %d\n", pthread_self(), sched_getcpu());
@@ -30,11 +23,17 @@ void* print_stuff(void* args) {
 
 
 
+void init(int argc, const char *argv[]) {
+    int nc = 2;
+    if (argc > 1) {
+	nc = atoi(argv[1]);
+    } 
+    const int num_cores = nc;    
 
-int main(int argc, const char * argv[]) {
-    // insert code here...
-    const int num_cores = 2; //specify_how_many_cores();
-    cout << num_cores << "\n";
+    long max_cores = sysconf(_SC_NPROCESSORS_ONLN);
+    if (num_cores > max_cores) {
+	cout << "Too many cores specified. Run again with " << max_cores << "  cores\n";
+    }
     
     //Create threads for each core
     pthread_t threads[num_cores];
@@ -53,6 +52,14 @@ int main(int argc, const char * argv[]) {
     for (int i = 0; i < num_cores; i++) {
 	pthread_join(threads[i], NULL);
     }
+}
+
+
+
+
+int main(int argc, const char * argv[]) {
+    // insert code here...
+    init(argc, argv);
 
     return 0;
 }
