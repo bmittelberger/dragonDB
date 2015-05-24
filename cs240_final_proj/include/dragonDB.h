@@ -9,9 +9,9 @@
 
 #include <map>
 #include <vector>
-#include <sched.h>
+
 #include <pthread.h>
-#include <thread>
+#include <sched.h>
 
 #include <stdlib.h>
 #include <queue>

@@ -48,10 +48,12 @@ int main(int argc, const char * argv[]) {
     for (int i = 0; i < num_cores; i++) {
         CPU_ZERO(&cpus);
         CPU_SET(i, &cpus);
-	int res = pthread_setaffinity_np(threads[i], sizeof(cpu_set_t), &cpus);
-        pthread_create(&threads[i], &attr, print_stuff, NULL);
+	printf("here\n");
+	//int res = pthread_setaffinity_np(threads[i], sizeof(cpu_set_t), &cpus);
+	string msg ("hello" + i);
+        pthread_create(&threads[i], NULL, print_stuff, reinterpret_cast<void*>(&msg));
+	printf("here2\n");
     }
     return 0;
 }
     
-

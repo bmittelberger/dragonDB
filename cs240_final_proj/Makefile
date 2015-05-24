@@ -1,6 +1,6 @@
 
 all:
-	g++ -std=gnu++11 -pthread src/main.cpp -o dragonDB
+	g++ -std=gnu++11 src/main.cpp -o dragonDB -lpthread
 
 
 clean: 
