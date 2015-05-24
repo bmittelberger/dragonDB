@@ -43,12 +43,12 @@ using namespace std;
  * for the persistent db, or creates the file if it doesn't exist.
  * This function also creates a new dragon_segment owned by this core.
  */
-dragon_core::dragon_core(string filename, int num_cores) {
+dragon_core::dragon_core(string filename, int num_cores, int core_id) {
     num_entries = 0;
     disk_flush_last_done = time(0);
     mailbox_last_checked = time(0);
     this->num_cores = num_cores;
-    consistent = false; //default value
+    this->core_id = core_id;
     
     //construct mailbox
     for(int i = 0; i < num_cores; i++ ) {
@@ -93,14 +93,15 @@ void dragon_core::flush_mailbox() {
         if (i == core_id) {
             continue;
         }
-        mailbox[i].mailbox_lock.lock();
+        pthread_mutex_t lock = mailbox[i].mailbox_lock;
+        pthread_mutex_lock(&lock);
         queue<package> *packages = mailbox[i].packages;
         while (packages->size() > 0) {
             package p = packages->front();
             packages->pop();
             segment->put(p);
         }
-        mailbox[i].mailbox_lock.unlock();
+        pthread_mutex_unlock(&lock);
     }
     mailbox_last_checked = time(0);
 }
@@ -112,9 +113,10 @@ void dragon_core::flush_mailbox() {
  * @param pacakge the package itself to add
  */
 void dragon_core::deliver_package(int slot_num, package &package) {
-    mailbox[slot_num].mailbox_lock.lock();
+    pthread_mutex_t lock = mailbox[slot_num].mailbox_lock;
+    pthread_mutex_lock(&lock);
     mailbox[slot_num].packages->push(package);
-    mailbox[slot_num].mailbox_lock.unlock();
+    pthread_mutex_unlock(&lock);
 }
 
 string dragon_core::get(string key) {
@@ -130,10 +132,6 @@ string dragon_core::get(string key) {
 
 void dragon_core::set_flush_rate(uint64_t rate) {
     mailbox_rate = rate;
-}
-
-void dragon_core::set_consistency(bool on) {
-    consistent = on;
 }
 
 /* Utilizes the c++ hash type to hash the string and find the correct

@@ -47,13 +47,15 @@ struct package {
 class dragon_segment {
 private:
     map<string, segment_entry*> store;
+    int core_id;
     int version_number;
     pthread_mutex_t segment_lock; //used if consistency is required
     string filename; //The file that the segment will write to
     
 public:
-    dragon_segment() {
+    dragon_segment(int core_id) {
         version_number = 0;
+        this->core_id = core_id;
         //Can only flush segments that correspond to our core
         //int cpu = sched_getcpu();
     }
@@ -86,7 +88,6 @@ private:
     uint64_t disk_flush_last_done; //indicates when we last flushed to disk
     uint64_t mailbox_last_checked; //indicates when we last checked mailboxes
     uint64_t mailbox_rate; //interval between mailbox checking
-    bool consistent;
     vector<slot> mailbox;
     
     hash<string> hasher;
@@ -94,10 +95,9 @@ private:
     void flush_mailbox();
     
 public:
-    dragon_core(string filename, int num_cores);
+    dragon_core(string filename, int num_cores, int core_id);
     void put(string key, string value);
     string get(string key);
-    void set_consistency(bool on);
     void set_flush_rate(uint64_t rate);
     void send_package(package p);
     void deliver_package(int slot_num, package& package);
@@ -107,7 +107,6 @@ public:
 
 class dragon_db {
 private:
-    vector<dragon_core* > cores;
     int num_cores;
     bool consistent;
     map<int, dragon_segment*>  map_segments; //hashing out to other segments on diff cores

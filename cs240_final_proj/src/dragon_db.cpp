@@ -10,7 +10,8 @@
 #include "dragonDB.h"
 
 using namespace std;
-    
+
+const uint64_t DISK_FLUSH_RATE = 1000;
     
 /* Opens up a new instantiation of the dragonDB main structures.
  * The filename passed in is in reference to a persisted db that
@@ -19,11 +20,22 @@ using namespace std;
  *
  * @param filename name for the persistence file
  */
-dragon_db* dragon_db::db_open(string filename) {
+dragon_db::dragon_db(string filename,int num_cores) {
     
-    
+    consistent = false; //default
+    this->num_cores = num_cores;
+
+    for(int i = 0; i < this->num_cores; i++) {
+        dragon_core *core = new dragon_core(filename,num_cores,core_id);
+        dragon_segment *segment = new dragon_segment(core_id);
+        map_cores.insert(i,core);
+        map_segments.insert(i,segment);
+    }
+    disk_flush_rate = DISK_FLUSH_RATE;
+
+
+
     //TODO: IMPLEMENT THIS FN
-    return NULL;
 }
 
 
