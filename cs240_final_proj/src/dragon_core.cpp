@@ -78,14 +78,14 @@ void dragon_core::flush_mailbox() {
         if (i == core_id) {
             continue;
         }
-        pthread_mutex_lock(mailbox[i].mailbox_lock);
+        pthread_mutex_lock(&mailbox[i].mailbox_lock);
         queue<package> *packages = mailbox[i].packages;
         while (packages->size() > 0) {
             package p = packages->front();
             packages->pop();
             segment->put(p);
         }
-        pthread_mutex_unlock(mailbox[i].mailbox_lock);
+        pthread_mutex_unlock(&mailbox[i].mailbox_lock);
     }
     mailbox_last_checked = time(0);
 }
@@ -97,9 +97,9 @@ void dragon_core::flush_mailbox() {
  * @param pacakge the package itself to add
  */
 void dragon_core::deliver_package(int slot_num, package &package) {
-    pthread_mutex_lock(mailbox[slot_num].mailbox_lock);
+    pthread_mutex_lock(&mailbox[slot_num].mailbox_lock);
     mailbox[slot_num].packages->push(package);
-    pthread_mutex_unlock(mailbox[slot_num].mailbox_lock);
+    pthread_mutex_unlock(&mailbox[slot_num].mailbox_lock);
 }
 
 string dragon_core::get(string key) {
