@@ -17,7 +17,6 @@ using namespace std;
 
 int specify_how_many_cores() {
     long nc = sysconf(_SC_NPROCESSORS_ONLN);
-    
     cout << "You have " << nc << " cores. How many cores would you like to use?\n";
     cin >> nc;
     return nc;
@@ -39,13 +38,16 @@ int main(int argc, const char * argv[]) {
     
     //Create threads for each core
     pthread_t threads[num_cores];
+    
+    pthread_attr_t attr;
     cpu_set_t cpus;
+    pthread_attr_init(&attr);
 
     for (int i = 0; i < num_cores; i++) {
         CPU_ZERO(&cpus);
         CPU_SET(i, &cpus);
-	//pthread_setaffinity_np(threads[i], sizeof(cpu_set_t), &cpus);
-        pthread_create(&threads[i], NULL, print_stuff, NULL);
+	pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpus);
+        pthread_create(&threads[i], &attr, print_stuff, NULL);
     }
 
     for (int i = 0; i < num_cores; i++) {
