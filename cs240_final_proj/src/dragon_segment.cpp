@@ -8,17 +8,18 @@
 
 #include <stdio.h>
 #include "../include/dragonDB.h"
+#include <iostream>
+#include <fstream>
 
 using namespace std;
     
 
-dragon_segment::dragon_segment(int core_id) {
+dragon_segment::dragon_segment(string filename, int core_id) {
     version_number = 0;
     this->core_id = core_id;
     pthread_mutex_init(&segment_lock,NULL);
-
-
-}
+    this->filename = filename;
+};
 
 /* Receives a package to put into the segment store. If it exists,
  * first checks timestamp to make sure we want to replace it with
@@ -43,7 +44,6 @@ void dragon_segment::put(package& p) {
     if (old_entry) {
         delete old_entry;
     }
-
 };
 
 /* Gets a segment entry out of the segment's store. Uses no locks,
@@ -69,9 +69,30 @@ segment_entry* dragon_segment::get(string key) {
 
 //Each core flushes to a unique file corresponding to
 //that core/segment
-int flush_to_disk() {
-    
-    return 0;
+int dragon_segment::flush_to_disk() {
+    string outfile = filename + "-" + to_string(core_id) + ".drg";
+    uint64_t segment_size = 0; //start at 0
+
+
+    //find checksum size
+
+    ofstream fs;
+    fs.open(outfile.c_str());
+    fs << segment_size;
+    fs << "\n"; //hold place for size until after we calculate it
+    // fs << checksum; Need to reserve space for checksum as well
+
+    map<string, segment_entry*>::iterator it;
+    string output;
+    for (it = store.begin(); it != store.end(); it++){
+        output = it->first + "," + it->second->value + "," + to_string(it->second->timestamp) + "\n";
+        segment_size += it->first.length();
+        segment_size += it->second->value.length();
+        segment_size += (to_string(it->second->timestamp)).length();
+        segment_size += 3; // for commas and endl
+        fs << output;
+    }
+    cout << "segment size: " << segment_size << endl;
 };
 
 int load_from_disk() {

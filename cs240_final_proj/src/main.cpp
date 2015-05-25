@@ -30,14 +30,20 @@ struct keyval {
 
 
 void* print_stuff(void* args) {
-    printf("ID: %lu, CPU: %d\n", pthread_self(), sched_getcpu());
-    
-/*    for (int i = 0; i < 26 ; i++) {
+    printf("ID: %lu, CPU: %d\n", pthread_self(), sched_getcpu());   
+/* 
+    db->flush();
+
+    for (int i = 0; i < 26 ; i++) {
         string key(to_string(i));
-        string value(to_string(i));
-        db->db_put(key,value);
+        string val = db->db_get(key);
+        cout << "for string " << key << ", got value " << val << endl;
+        if (key != val) {
+            cout << "ERROR -- MISMATCH ON KEY/VAL PAIR" << endl;
+            exit(1);
+        }
     }
-*/    return 0;
+*/
 }
 
 void* put(void* args) {
@@ -50,14 +56,13 @@ void* put(void* args) {
 void *get(void* args) {
     keyval *kv;
     kv = (keyval *)args;
-/*    string val = db->db_get(kv->key, kv->value);
+    string val = db->db_get(kv->key);
     string malformed("");
     if (val.compare(malformed)) {
         cout << "KEY DOES NOT EXIST\n";
     } else {
         cout << val << endl;
     }
-*/
 }
 
 
@@ -142,6 +147,7 @@ int main(int argc, const char * argv[]) {
     // INITIALIZATION 
     int nc = 2;
     string filename = "";
+
     if (argc > 1) {
 	   nc = atoi(argv[1]);
     } 

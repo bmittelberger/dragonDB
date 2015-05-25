@@ -31,8 +31,8 @@ dragon_core::dragon_core(string filename, int num_cores, int core_id, dragon_db 
 
     /* Instantiate private variables. */
     num_entries = 0;
-    disk_flush_last_done = time(0);
-    mailbox_last_checked = time(0);
+    disk_flush_last_done = db->get_time();
+    mailbox_last_checked = db->get_time();
     this->num_cores = num_cores;
     this->core_id = core_id;
     this->db = db;
@@ -77,27 +77,33 @@ void dragon_core::put(string key, string value) {
     /* Create a package out of the K/V pair. */
     package p;
     p.contents = pair<string,string>(key,value);
-    p.timestamp = time(0);
+    p.timestamp = db->get_time();
 
     /* Determine which core's segment the key belongs on. */
     int dest_core_id = map_to_core(key);
     
     /* If the segment is owned locally, perform the put. */
     if (dest_core_id == this->core_id) { 
+
         dragon_segment* segment = db->get_segment(dest_core_id);
         if (!segment) cout << "segment is null" << endl;
         segment->put(p);
 
     /* If the segment is owned by another core, queue the package. */
     } else { 
+
         dragon_core* dest_core = db->get_core(dest_core_id);
         if (!dest_core) cout << "core is null" << endl;
         dest_core->deliver_package(this->core_id, p);
     }
     
     /* Flush the local core's mailbox periodically. */
-    if (time(0) - mailbox_last_checked > mailbox_rate) {
-        //flush_mailbox();
+    if (db->get_time() - mailbox_last_checked > mailbox_rate) {
+        flush_mailbox();
+    }
+    if (db->get_time() - disk_flush_last_done > db->disk_flush_rate){
+        dragon_segment * segment = db->get_segment(core_id);
+        segment->flush_to_disk();
     }
 }
 
@@ -140,6 +146,7 @@ string dragon_core::get(string key) {
 void dragon_core::flush_mailbox() {
     dragon_segment* segment = db->get_segment(core_id);
 
+    cout << "flushing mailbox for core" << core_id << endl;
     /* Loop through the slots (except our own, which should be empty). */
     for (int i = 0; i < mailbox.size(); i++) {
         if (i == core_id)
@@ -160,7 +167,7 @@ void dragon_core::flush_mailbox() {
     }
 
     /* Update the last time at which the mailbox was checked. */
-    mailbox_last_checked = time(0);
+    mailbox_last_checked = db->get_time();
 }
 
 /* Function: dragon_core::deliver_package
