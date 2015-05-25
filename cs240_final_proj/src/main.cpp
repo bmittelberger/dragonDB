@@ -32,6 +32,10 @@ void* print_stuff(void* args) {
         string key(to_string(i));
         string val = db->db_get(key);
         cout << "for string " << key << ", got value " << val << endl;
+        if (key != val) {
+            cout << "ERROR -- MISMATCH ON KEY/VAL PAIR" << endl;
+            exit(1);
+        }
     }
 
 

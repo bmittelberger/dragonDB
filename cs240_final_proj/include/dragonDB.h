@@ -22,6 +22,7 @@
 #include <string>
 #include <iostream>
 #include <stdio.h>
+#include <chrono>
 
 #include <time.h>
 
@@ -150,6 +151,8 @@ public:
     void close();
     
     void set_consistency(bool is_strong);
+
+    uint64_t get_time();
 };
     
 

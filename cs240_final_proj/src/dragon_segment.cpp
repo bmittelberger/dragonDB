@@ -92,6 +92,7 @@ int dragon_segment::flush_to_disk() {
         segment_size += 3; // for commas and endl
         fs << output;
     }
+    cout << "segment size: " << segment_size << endl;
 };
 
 int load_from_disk() {

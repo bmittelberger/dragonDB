@@ -102,6 +102,10 @@ void dragon_db::close() {
     //TODO: IMPLEMENT THIS FN
 }
 
+uint64_t dragon_db::get_time(){
+    return std::chrono::system_clock::now().time_since_epoch() / 
+            std::chrono::milliseconds(1);
+}
 
 /* Sets the consistency value for the database. If true, then all puts
  * and gets on any core will be immediately available to any other thread
