@@ -10,7 +10,10 @@
 #include <map>
 #include <vector>
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
 #include <pthread.h>
 #include <sched.h>
 
@@ -111,11 +114,12 @@ private:
     vector<slot> mailbox;
     
     hash<string> hasher;
-    int find_core(string key); //hashes incoming key to find which segment it should go to
+    int map_to_core(string key); //hashes key to find which segment it should go to
     void flush_mailbox();
     
 public:
     dragon_core(string filename, int num_cores, int core_id, dragon_db* db);
+	~dragon_core();
     void put(string key, string value);
     string get(string key);
     void set_flush_rate(uint64_t rate);
@@ -146,7 +150,7 @@ public:
     string db_get(string key);
     void close();
     
-    void set_consistency(bool on);
+    void set_consistency(bool is_strong);
 };
     
 

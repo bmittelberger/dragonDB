@@ -11,6 +11,8 @@
 
 using namespace std;
 
+
+const bool CONSISTENCY_MODEL = false;       /* true -> strong, false -> eventual */
 const uint64_t DISK_FLUSH_RATE = 1000;
     
 /* Opens up a new instantiation of the dragonDB main structures.
@@ -22,7 +24,7 @@ const uint64_t DISK_FLUSH_RATE = 1000;
  */
 dragon_db::dragon_db(string filename,int num_cores) {
     
-    consistent = false; //default
+    consistent = CONSISTENCY_MODEL; //default
     this->num_cores = num_cores;
 
     for(int i = 0; i < this->num_cores; i++) {
@@ -45,12 +47,15 @@ dragon_db::dragon_db(string filename,int num_cores) {
  */
 void dragon_db::db_put(string key, string value) {
     
+
     if (value == ""  || key == "") {
         return;
     }
-    dragon_core *core = map_cores[0];
+    dragon_core *core = map_cores[sched_getcpu()];
     if (core) {
         core->put(key,value);
+    } else {
+        cout << "Core " << sched_getcpu() << " was null in put" << endl;
     }
 }
 
@@ -61,10 +66,13 @@ void dragon_db::db_put(string key, string value) {
  * @param key string as key for the k/v store
  */
 string dragon_db::db_get(string key) {
-    dragon_core *core = map_cores[0];
+
+    dragon_core *core = map_cores[sched_getcpu()];
     if (core){
         string ret = core->get(key);
         return ret;
+    } else {
+        cout << "Core " << sched_getcpu() << " was null in get" << endl;
     }
 }
 
@@ -94,8 +102,8 @@ void dragon_db::close() {
  * consistency, but not immediate. False will scale better because it doesn't
  * require serialized consistency.
  */
-void set_consistency(bool on) {
-    //TODO: IMPLEMENT THIS FN
+void dragon_db::set_consistency(bool is_strong) {
+    consistent = is_strong;
 }
 
 
