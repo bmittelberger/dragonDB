@@ -18,6 +18,7 @@
 
 #define GET 1
 #define PUT 2
+#define CLOSE 3
 
 using namespace std;
 
@@ -58,7 +59,7 @@ void *get(void* args) {
     kv = (keyval *)args;
     string val = db->db_get(kv->key);
     string malformed("");
-    if (val.compare(malformed)) {
+    if (val.compare(malformed) == 0) {
         cout << "KEY DOES NOT EXIST\n";
     } else {
         cout << val << endl;
@@ -94,45 +95,53 @@ void set_thread(string key, string value, pthread_t threads[],
     }
 }
 
-
-void read_commands(string filename, pthread_t threads[], 
-    int cores_used[], const int num_cores) {
-    //If not file was specified, read from stdin
+void process_lines(pthread_t threads[], 
+    int cores_used[], const int num_cores, string line) {
 
     string open ("open");
     string put ("puts");
     string get ("get");
+    string close ("close");
 
-    string line; 
     string command, key, value;
+
+    istringstream iss(line);
+    iss >> command;
+
+    if (command.compare(open) == 0) {
+        iss >> command;
+        db = new dragon_db(command.c_str(), num_cores);
+    } else if (command.compare(put) == 0) {
+        iss >> key; 
+        iss >> value;
+        set_thread(key, value, threads, cores_used, num_cores, PUT);
+    } else if (command.compare(get) == 0) {
+        iss >> key;
+        value = "";
+        set_thread(key, value, threads, cores_used, num_cores, GET);
+    } else if (command.compare(close) == 0) {
+        set_thread(key, value, threads, cores_used, num_cores, CLOSE);
+    } else {
+        cout << "Invalid command\n";
+    }
+}
+
+
+void read_commands(string filename, pthread_t threads[], 
+    int cores_used[], const int num_cores) {
+    //If not file was specified, read from stdin
+    string line; 
 
     if (filename == "") {
         while (getline(cin, line)) {
-            cout << line << endl;
+            process_lines(threads, cores_used, num_cores, line);
         }
 
     } else {
         ifstream myfile(filename);
         if (myfile) {
             while (getline( myfile, line )) {
-                istringstream iss(line);
-                iss >> command;
-
-                if (command.compare(open) == 0) {
-                    iss >> command;
-                    db = new dragon_db(command.c_str(), num_cores);
-                } else if (command.compare(put) == 0) {
-                    iss >> key; 
-                    iss >> value;
-                    set_thread(key, value, threads, cores_used, num_cores, PUT);
-                } else if (command.compare(get) == 0) {
-                    iss >> key;
-                    value = "";
-                    set_thread(key, value, threads, cores_used, num_cores, GET);
-                } else {
-                    cout << "Invalid command\n";
-                }
-
+                process_lines(threads, cores_used, num_cores, line);
             }
             myfile.close();
         } else {
