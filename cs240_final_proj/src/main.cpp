@@ -30,9 +30,7 @@ struct keyval {
 };
 
 
-void* print_stuff(void* args) {
-    printf("ID: %lu, CPU: %d\n", pthread_self(), sched_getcpu());
-    
+void* print_stuff(void* args) {    
     
 /*    for (int i = 0; i < 10001 ; i++) {
         string key(to_string(i));
@@ -59,6 +57,7 @@ void* put(void* args) {
     keyval *kv;
     kv = (keyval *)args;
     db->db_put(kv->key, kv->value);
+    db->flush();
 }
 
 
@@ -105,6 +104,7 @@ void set_thread(string key, string value, pthread_t threads[],
     cores_used[rand_cpu] = 0;
 }
 
+
 void process_lines(pthread_t threads[], 
     int cores_used[], const int num_cores, string line) {
 
@@ -143,6 +143,9 @@ void read_commands(string filename, pthread_t threads[],
     string line; 
 
     if (filename == "") {
+        cout << "Your first command to interact with any key-value store will \n" <<
+                "need to be an open of a specifically-named store, i.e. open \n" <<
+                "new-store\n";
         while (getline(cin, line)) {
             process_lines(threads, cores_used, num_cores, line);
         }
