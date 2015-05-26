@@ -113,7 +113,8 @@ int dragon_segment::flush_to_disk() {
 /* Iterate through all of the segements until we find the most
  * recent complete one. Complete means that the checksum matches
  * a newly computed checksum of the data in the file. If it doesn't
- * match, we roll back a segment and attempt to checksum there
+ * match, we roll back a segment and check the validity. We continue
+ * to roll back until we find a complete segment that we can load.
  */
 int dragon_segment::load_from_disk() {
     string infile = filename + "-" + to_string(core_id) + ".drg";
