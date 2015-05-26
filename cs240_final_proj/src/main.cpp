@@ -22,6 +22,7 @@
 
 using namespace std;
 
+string store_name;
 dragon_db *db;
 
 struct keyval {
@@ -74,6 +75,12 @@ void *get(void* args) {
 }
 
 
+void *close(void *args) {
+    db->flush();
+    delete db;
+}
+
+
 void set_thread(string key, string value, pthread_t threads[], 
     int cores_used[], const int num_cores, int flag) {
 
@@ -99,6 +106,8 @@ void set_thread(string key, string value, pthread_t threads[],
         pthread_create(&threads[rand_cpu], &attr, get,  (void *)kv);
     } else if (flag == PUT) {
         pthread_create(&threads[rand_cpu], &attr, put,  (void *)kv);
+    } else if (flag == CLOSE) {
+        pthread_create(&threads[rand_cpu], &attr, close, NULL);
     }
     pthread_join(threads[rand_cpu], NULL);
     cores_used[rand_cpu] = 0;
@@ -120,6 +129,7 @@ void process_lines(pthread_t threads[],
 
     if (command.compare(open) == 0) {
         iss >> command;
+        store_name = command;
         db = new dragon_db(command.c_str(), num_cores);
     } else if (command.compare(put) == 0) {
         iss >> key; 
@@ -143,7 +153,7 @@ void read_commands(string filename, pthread_t threads[],
     string line; 
 
     if (filename == "") {
-        cout << "Your first command to interact with any key-value store will \n" <<
+        cout << "\nYour first command to interact with any key-value store will \n" <<
                 "need to be an open of a specifically-named store, i.e. open \n" <<
                 "new-store\n";
         while (getline(cin, line)) {

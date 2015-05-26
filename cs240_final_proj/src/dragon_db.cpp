@@ -40,6 +40,14 @@ dragon_db::dragon_db(string filename,int num_cores) {
 }
 
 
+dragon_db::~dragon_db() {
+    for (int i = 0; i < this->num_cores; i++) {
+        delete map_cores[i];
+        delete map_segments[i];
+    }
+}
+
+
 /* Abstracted put function for the database, each application will interact
  * with this exposed function, adding its own key and value. Returns true
  * on success and false on failure
@@ -79,10 +87,12 @@ string dragon_db::db_get(string key) {
 }
 
 void dragon_db::flush() {
-    dragon_core *core = map_cores[sched_getcpu()];
-    dragon_segment *segment = map_segments[sched_getcpu()];
-    core->flush_mailbox();
-    segment->flush_to_disk();
+    for (int i = 0 ; i < num_cores ; i++ ){
+        dragon_core *core = map_cores[i];
+        dragon_segment *segment = map_segments[i];
+        core->flush_mailbox();
+        segment->flush_to_disk();
+    }
 }
 
 

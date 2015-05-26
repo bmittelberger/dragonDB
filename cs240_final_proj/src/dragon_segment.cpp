@@ -23,6 +23,11 @@ dragon_segment::dragon_segment(string filename, int core_id) {
     this->filename = filename;
 };
 
+dragon_segment::~dragon_segment() {
+    pthread_mutex_destroy(&segment_lock);
+}
+
+
 /* Receives a package to put into the segment store. If it exists,
  * first checks timestamp to make sure we want to replace it with
  * the inputted value. If we want to replace (meaning the inputted timestamp
@@ -41,8 +46,11 @@ void dragon_segment::put(package& p) {
     segment_entry* entry = new segment_entry;
     entry->value = p.contents.second;
     entry->timestamp = p.timestamp;
+
+    pthread_mutex_lock(&segment_lock);
     store[p.contents.first] = entry;
-    
+    pthread_mutex_unlock(&segment_lock);
+
     if (old_entry) {
         delete old_entry;
     }
@@ -75,7 +83,6 @@ int dragon_segment::flush_to_disk() {
     string outfile = filename + "-" + to_string(core_id) + ".drg";
     uint64_t segment_size = 0; //start at 1 for newline after size write
 
-    cout << "flushing to file for core: " << sched_getcpu() << endl;
     ofstream fs(outfile.c_str(), ofstream::app);
 
 
@@ -83,6 +90,7 @@ int dragon_segment::flush_to_disk() {
     vector<string> out;
     map<string, segment_entry*>::iterator it;
     string output;
+    pthread_mutex_lock(&segment_lock);
     for (it = store.begin(); it != store.end(); it++){
         output = it->first + "," + it->second->value + "," + to_string(it->second->timestamp) + "\n";
         segment_size += it->first.length();
@@ -91,6 +99,7 @@ int dragon_segment::flush_to_disk() {
         segment_size += 3; // for commas and endl
         out.push_back(output);
     }
+    pthread_mutex_unlock(&segment_lock);
     fs << segment_size;
     fs << "\n" ;
     
@@ -132,7 +141,6 @@ int dragon_segment::load_from_disk() {
     string line;
     while (true) {
         getline(is,line);
-        cout << line << endl;
         int segment_size = stoi(line);
         int cur_offset = is.tellg();
         if (cur_offset + segment_size >= filesize) break;
@@ -158,9 +166,6 @@ int dragon_segment::load_from_disk() {
         entry->value = value;
         entry->timestamp = timestamp;
 
-        // cout << "key:" << key ;
-        // cout << " value: " << value ;
-        // cout << " timestamp: " << timestamp << endl;
 
         store[key] = entry;
 

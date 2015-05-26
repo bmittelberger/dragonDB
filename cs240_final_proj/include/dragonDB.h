@@ -58,7 +58,7 @@ private:
     
 public:
     dragon_segment(string filename, int core_id);
-    
+    ~dragon_segment();
     void put(package& p);
     segment_entry* get(string key);
     int flush_to_disk();
@@ -140,6 +140,7 @@ private:
     
 public:
     dragon_db(string filename, int num_cores);
+    ~dragon_db();
     uint64_t disk_flush_rate;
     
     dragon_segment* get_segment(int core_id);

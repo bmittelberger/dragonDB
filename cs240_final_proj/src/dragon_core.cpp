@@ -96,7 +96,6 @@ void dragon_core::put(string key, string value) {
         dragon_core* dest_core = db->get_core(dest_core_id);
         if (!dest_core) cout << "core is null" << endl;
 
-        cout << "Before deliver package called\n";
         dest_core->deliver_package(this->core_id, p);
     }
     
@@ -151,7 +150,6 @@ string dragon_core::get(string key) {
 void dragon_core::flush_mailbox() {
     dragon_segment* segment = db->get_segment(core_id);
 
-    cout << "flushing mailbox for core" << core_id << endl;
     /* Loop through the slots (except our own, which should be empty). */
 
     cout << "Mailbox size: " << mailbox.size() << endl;
@@ -162,10 +160,13 @@ void dragon_core::flush_mailbox() {
         pthread_mutex_t lock = mailbox[i].mailbox_lock;
         pthread_mutex_lock(&lock);
 
+
+
         /* Process each package in each slot. */
         queue<package> *packages = mailbox[i].packages;
         while (packages->size() > 0) {
             package p = packages->front();
+
             packages->pop();
             segment->put(p);
         }
