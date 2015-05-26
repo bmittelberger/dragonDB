@@ -62,6 +62,7 @@ public:
     void put(package& p);
     segment_entry* get(string key);
     int flush_to_disk();
+    int load_from_disk();
     void lock_segment();
     void unlock_segment();
 };
