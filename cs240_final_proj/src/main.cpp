@@ -34,7 +34,7 @@ void* print_stuff(void* args) {
     printf("ID: %lu, CPU: %d\n", pthread_self(), sched_getcpu());
     
     
-    for (int i = 0; i < 10001 ; i++) {
+/*    for (int i = 0; i < 10001 ; i++) {
         string key(to_string(i));
         string value(to_string(i));
         db->db_put(key,value);
@@ -52,7 +52,7 @@ void* print_stuff(void* args) {
             exit(1);
         }
     }
-
+*/
 }
 
 void* put(void* args) {
@@ -101,6 +101,8 @@ void set_thread(string key, string value, pthread_t threads[],
     } else if (flag == PUT) {
         pthread_create(&threads[rand_cpu], &attr, put,  (void *)kv);
     }
+    pthread_join(threads[rand_cpu], NULL);
+    cores_used[rand_cpu] = 0;
 }
 
 void process_lines(pthread_t threads[], 
@@ -181,7 +183,7 @@ int main(int argc, const char * argv[]) {
     	exit(0);
     }
     
-    db = new dragon_db("no_file.txt", num_cores);
+    //db = new dragon_db("no_file.txt", num_cores);
     //Create threads for each core
     pthread_t threads[num_cores];
     int cores_used[num_cores];
