@@ -152,7 +152,6 @@ void dragon_core::flush_mailbox() {
 
     /* Loop through the slots (except our own, which should be empty). */
 
-    cout << "Mailbox size: " << mailbox.size() << endl;
     for (int i = 0; i < mailbox.size(); i++) {
         if (i == core_id)
             continue;

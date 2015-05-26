@@ -114,11 +114,15 @@ int dragon_segment::flush_to_disk() {
         cksum ^= hash_str(output);
     }
     pthread_mutex_unlock(&segment_lock);
+    
+    segment_size += to_string(cksum).length() + 1; //+1 is for newline
+
+
     fs << segment_size;
     fs << "\n" ;
     
     //Write checksum here
-    fs << (int) cksum;
+    fs << to_string(cksum);
     fs << "\n";
 
     for (int i = 0; i < out.size(); i++){
@@ -142,10 +146,11 @@ int dragon_segment::load_from_disk() {
     string infile = filename + "/" + filename + "-" + to_string(core_id) + ".drg";
 
     ifstream is (infile, ios::in);
-    cout << "reading from file " << infile << endl;
+    cout << "reading from file " << infile << "..." << endl;
     
     //if file doesn't exist, return
     if (!is.good()){
+        cout << "nothing to read" << endl;
         return -1;
     }
 
@@ -153,7 +158,10 @@ int dragon_segment::load_from_disk() {
     is.seekg(0,iostream::end);
     int filesize = is.tellg();
     is.seekg(0,iostream::beg);
-    if (filesize == 0) return -1;
+    if (filesize == 0) {
+        cout << "nothing to read" << endl;
+        return -1;
+    }
 
     int prev_segment_offset = 0;
     string line;
@@ -170,8 +178,8 @@ int dragon_segment::load_from_disk() {
        with the checksum appended to segsize. */
     /* Extract the checksum. */
     string cksum_line;
-    getline(is,line);
-    size_t disk_cksum = stoi(cksum_line);
+    getline(is, cksum_line);
+    size_t disk_cksum = stoull(cksum_line);
     size_t cksum = 0;
 
     //iterate through all lines of the segment
@@ -197,6 +205,7 @@ int dragon_segment::load_from_disk() {
         cksum ^= hash_str(workline);
     }
     
+    cout << "Done loading " << infile << endl;
     /* TODO: figure out what to do if cksum != disk_cksum. */
 
     /* TODO: why aren't we returning an int here? */
