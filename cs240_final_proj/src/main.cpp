@@ -76,12 +76,11 @@ void *get(void* args) {
 
 
 void *close(void *args) {
-    db->flush();
-    delete db;
+    db->close();
 }
 
 
-void set_thread(string key, string value, pthread_t threads[], 
+int set_thread(string key, string value, pthread_t threads[], 
     int cores_used[], const int num_cores, int flag) {
 
     pthread_attr_t attr;
@@ -109,40 +108,58 @@ void set_thread(string key, string value, pthread_t threads[],
     } else if (flag == CLOSE) {
         pthread_create(&threads[rand_cpu], &attr, close, NULL);
     }
-    pthread_join(threads[rand_cpu], NULL);
-    cores_used[rand_cpu] = 0;
+
+    return rand_cpu;
 }
 
 
 void process_lines(pthread_t threads[], 
     int cores_used[], const int num_cores, string line) {
 
-    string open ("open");
     string put ("puts");
     string get ("get");
     string close ("close");
 
     string command, key, value;
-
+    
     istringstream iss(line);
     iss >> command;
+    int tu;
+
+    if (command.compare(put) == 0) {
+        iss >> key; 
+        iss >> value;
+        tu = set_thread(key, value, threads, cores_used, num_cores, PUT);
+    } else if (command.compare(get) == 0) {
+        iss >> key;
+        value = "";
+        tu = set_thread(key, value, threads, cores_used, num_cores, GET);
+    } else if (command.compare(close) == 0) {
+        tu = set_thread(key, value, threads, cores_used, num_cores, CLOSE);
+    } else {
+        cout << "Invalid command\n";
+        tu = -1;
+    }
+
+    if (tu != -1 ) {
+        cores_used[tu] = 0;
+    }
+}
+
+void read_file(string line, pthread_t threads[], 
+    int cores_used[], const int num_cores) {
+    string open("open");
+    string command;
+    istringstream iss(line);
+    iss >> command;
+    int tu;
 
     if (command.compare(open) == 0) {
         iss >> command;
         store_name = command;
         db = new dragon_db(command.c_str(), num_cores);
-    } else if (command.compare(put) == 0) {
-        iss >> key; 
-        iss >> value;
-        set_thread(key, value, threads, cores_used, num_cores, PUT);
-    } else if (command.compare(get) == 0) {
-        iss >> key;
-        value = "";
-        set_thread(key, value, threads, cores_used, num_cores, GET);
-    } else if (command.compare(close) == 0) {
-        set_thread(key, value, threads, cores_used, num_cores, CLOSE);
     } else {
-        cout << "Invalid command\n";
+        process_lines(threads, cores_used, num_cores, line);
     }
 }
 
@@ -157,18 +174,27 @@ void read_commands(string filename, pthread_t threads[],
                 "need to be an open of a specifically-named store, i.e. open \n" <<
                 "new-store\n";
         while (getline(cin, line)) {
-            process_lines(threads, cores_used, num_cores, line);
+            read_file(line, threads, cores_used, num_cores);
+        }
+
+        for (int i=0; i< num_cores; i++) {
+           pthread_join(threads[i], NULL);
         }
 
     } else {
         ifstream myfile(filename);
         if (myfile) {
             while (getline( myfile, line )) {
-                process_lines(threads, cores_used, num_cores, line);
+                read_file(line, threads, cores_used, num_cores);
+             }
+            
+            for (int i=0; i< num_cores; i++) {
+               pthread_join(threads[i], NULL);
             }
+
             myfile.close();
         } else {
-
+            cout << "You need to specify a correct dragonDB key-value store\n";
         }
 
     }
@@ -189,7 +215,6 @@ int main(int argc, const char * argv[]) {
 
     const int num_cores = nc;    
     
-
     long max_cores = sysconf(_SC_NPROCESSORS_ONLN);
     if (num_cores > max_cores) {
     	cout << "Too many cores specified. Run again with <= " << max_cores << " cores\n";
