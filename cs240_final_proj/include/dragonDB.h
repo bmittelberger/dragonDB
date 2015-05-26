@@ -55,6 +55,8 @@ private:
     int version_number;
     pthread_mutex_t segment_lock; //used if consistency is required
     string filename; //The file that the segment will write to
+
+    size_t hash_str(string input);
     
 public:
     dragon_segment(string filename, int core_id);

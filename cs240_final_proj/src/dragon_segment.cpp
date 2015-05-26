@@ -95,6 +95,8 @@ int dragon_segment::flush_to_disk() {
 
     ofstream fs(outfile.c_str(), ofstream::app);
 
+    /* Keep track of a running checksum. */
+    size_t cksum = 0;
 
     //THIS IS REALLY SHITTY -- FIND A WAY TO DO IT IN A SINGLE PASS
     vector<string> out;
@@ -108,18 +110,23 @@ int dragon_segment::flush_to_disk() {
         segment_size += (to_string(it->second->timestamp)).length();
         segment_size += 3; // for commas and endl
         out.push_back(output);
+
+        cksum ^= hash_str(output);
     }
     pthread_mutex_unlock(&segment_lock);
     fs << segment_size;
     fs << "\n" ;
     
     //Write checksum here
+    fs << (int) cksum;
+    fs << "\n";
 
     for (int i = 0; i < out.size(); i++){
         fs << out[i];
     }
     version_number ++;
 };
+
 
 
 
@@ -147,7 +154,6 @@ int dragon_segment::load_from_disk() {
     is.seekg(0,iostream::beg);
     if (filesize == 0) return -1;
 
-
     int prev_segment_offset = 0;
     string line;
     while (true) {
@@ -158,6 +164,14 @@ int dragon_segment::load_from_disk() {
         is.seekg(segment_size, iostream::cur);
         prev_segment_offset = cur_offset;
     }
+
+    /* TODO: ensure that the logic above still works even
+       with the checksum appended to segsize. */
+    /* Extract the checksum. */
+    string cksum_line;
+    getline(is,line);
+    size_t disk_cksum = stoi(cksum_line);
+    size_t cksum = 0;
 
     //iterate through all lines of the segment
     while (getline(is,line)) {
@@ -177,15 +191,29 @@ int dragon_segment::load_from_disk() {
         entry->value = value;
         entry->timestamp = timestamp;
 
-
         store[key] = entry;
 
+        cksum ^= hash_str(workline);
     }
+    
+    /* TODO: figure out what to do if cksum != disk_cksum. */
 
-
+    /* TODO: why aren't we returning an int here? */
 };
 
+size_t dragon_segment::hash_str(string input) {
 
+    /* Start with some primes. */
+    size_t hash = 937;
+    size_t p1 = 37;
+    size_t p2 = 79;
+
+    for (int i = 0; i < input.size(); i++) {
+        hash = hash * p1 ^ ((int) input[i] * p2);
+    }
+
+    return hash;
+}
 
 void lock_segment() {
     
