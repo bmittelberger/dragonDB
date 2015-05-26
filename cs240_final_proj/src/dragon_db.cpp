@@ -30,8 +30,10 @@ dragon_db::dragon_db(string filename,int num_cores) {
     for(int i = 0; i < this->num_cores; i++) {
         dragon_core *core = new dragon_core(filename, num_cores, i, this);
         dragon_segment *segment = new dragon_segment(filename, i);
+        segment->load_from_disk();
         map_cores[i] = core;
         map_segments[i] = segment;
+
     }
     disk_flush_rate = DISK_FLUSH_RATE;
 

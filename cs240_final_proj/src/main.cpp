@@ -21,22 +21,25 @@ void* print_stuff(void* args) {
     printf("ID: %lu, CPU: %d\n", pthread_self(), sched_getcpu());
     
     
-    for (int i = 0; i < 26 ; i++) {
+    for (int i = 0; i < 10001 ; i++) {
         string key(to_string(i));
         string value(to_string(i));
         db->db_put(key,value);
     }
     db->flush();
 
-    for (int i = 0; i < 26 ; i++) {
+    for (int i = 0; i < 25 ; i++) {
         string key(to_string(i));
         string val = db->db_get(key);
-        cout << "for string " << key << ", got value " << val << endl;
+        //cout << "CPU: " << sched_getcpu() ;
+        //cout << " -- for string " << key << ", got value " << val << endl;
         if (key != val) {
             cout << "ERROR -- MISMATCH ON KEY/VAL PAIR" << endl;
             exit(1);
         }
     }
+    
+    //db->flush();
 
 
     return 0;
