@@ -79,10 +79,12 @@ string dragon_db::db_get(string key) {
 }
 
 void dragon_db::flush() {
-    dragon_core *core = map_cores[sched_getcpu()];
-    dragon_segment *segment = map_segments[sched_getcpu()];
-    core->flush_mailbox();
-    segment->flush_to_disk();
+    for (int i = 0 ; i < num_cores ; i++ ){
+        dragon_core *core = map_cores[i];
+        dragon_segment *segment = map_segments[i];
+        core->flush_mailbox();
+        segment->flush_to_disk();
+    }
 }
 
 

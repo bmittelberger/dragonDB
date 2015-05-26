@@ -59,6 +59,7 @@ void* put(void* args) {
     keyval *kv;
     kv = (keyval *)args;
     db->db_put(kv->key, kv->value);
+    db->flush();
 }
 
 
