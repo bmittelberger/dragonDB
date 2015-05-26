@@ -40,6 +40,14 @@ dragon_db::dragon_db(string filename,int num_cores) {
 }
 
 
+dragon_db::~dragon_db() {
+    for (int i = 0; i < this->num_cores; i++) {
+        delete map_cores[i];
+        delete map_segments[i];
+    }
+}
+
+
 /* Abstracted put function for the database, each application will interact
  * with this exposed function, adding its own key and value. Returns true
  * on success and false on failure
@@ -48,8 +56,6 @@ dragon_db::dragon_db(string filename,int num_cores) {
  * @param value string as value for the k/v store
  */
 void dragon_db::db_put(string key, string value) {
-    
-
     if (value == ""  || key == "") {
         return;
     }
@@ -68,7 +74,6 @@ void dragon_db::db_put(string key, string value) {
  * @param key string as key for the k/v store
  */
 string dragon_db::db_get(string key) {
-
     dragon_core *core = map_cores[sched_getcpu()];
     if (core){
         string ret = core->get(key);
@@ -102,8 +107,8 @@ dragon_core* dragon_db::get_core(int core_id) {
  * needs to use the db. 
  */
 void dragon_db::close() {
-    
-    //TODO: IMPLEMENT THIS FN
+    this->flush();
+    delete this;
 }
 
 uint64_t dragon_db::get_time(){

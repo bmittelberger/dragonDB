@@ -55,10 +55,12 @@ private:
     int version_number;
     pthread_mutex_t segment_lock; //used if consistency is required
     string filename; //The file that the segment will write to
+
+    size_t hash_str(string input);
     
 public:
     dragon_segment(string filename, int core_id);
-    
+    ~dragon_segment();
     void put(package& p);
     segment_entry* get(string key);
     int flush_to_disk();
@@ -140,6 +142,7 @@ private:
     
 public:
     dragon_db(string filename, int num_cores);
+    ~dragon_db();
     uint64_t disk_flush_rate;
     
     dragon_segment* get_segment(int core_id);
