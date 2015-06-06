@@ -81,7 +81,7 @@ void dragon_core::put(string key, string value) {
 
     /* Determine which core's segment the key belongs on. */
     int dest_core_id = map_to_core(key);
-    cout << "Current thread " << sched_getcpu() << " Dest_core: " << dest_core_id << endl;
+    //cout << "Current core: " << sched_getcpu() << " Dest_core: " << dest_core_id << endl;
 
     /* If the segment is owned locally, perform the put. */
     if (dest_core_id == this->core_id) { 
@@ -123,7 +123,7 @@ string dragon_core::get(string key) {
     /* Determine which core's segment the key belongs on. */
     int dest_core = map_to_core(key);
 
-    cout << "Current thread " << sched_getcpu() << " Dest_core: " << dest_core << endl;
+    //cout << "Current core: " << sched_getcpu() << " Dest core: " << dest_core << endl;
 
     /* Check to see if an entry exists for this key. */
     dragon_segment* segment = db->get_segment(dest_core);
@@ -157,8 +157,10 @@ void dragon_core::flush_mailbox() {
             continue;
 
         pthread_mutex_t lock = mailbox[i].mailbox_lock;
-        pthread_mutex_lock(&lock);
 
+        cout << "FLUSH_MAILBOX [" << sched_getcpu() <<"] SEGMENT[" << i << "] -- START LOCKING " << endl;
+        pthread_mutex_lock(&lock);
+        cout << "FLUSH_MAILBOX [" << sched_getcpu() <<"] SEGMENT[" << i << "] -- DONE LOCKING " << endl;
 
 
         /* Process each package in each slot. */
@@ -170,7 +172,9 @@ void dragon_core::flush_mailbox() {
             segment->put(p);
         }
 
+        cout << "FLUSH_MAILBOX [" << sched_getcpu() <<"] SEGMENT[" << i << "] -- START UNLOCKING " << endl;
         pthread_mutex_unlock(&lock);
+        cout << "FLUSH_MAILBOX [" << sched_getcpu() <<"] SEGMENT[" << i << "] -- DONE UNLOCKING " << endl;
     }
 
     /* Update the last time at which the mailbox was checked. */
@@ -188,8 +192,13 @@ void dragon_core::flush_mailbox() {
  */
 void dragon_core::deliver_package(int slot_num, package &package) {
     pthread_mutex_t lock = mailbox[slot_num].mailbox_lock;
+    
+    cout << "DELIVER PACKAGE [" << sched_getcpu() <<"] -- START LOCKING " << endl;
     pthread_mutex_lock(&lock);
+    cout << "DELIVER PACKAGE [" << sched_getcpu() <<"] -- DONE LOCKING " << endl;
+    cout << "DELIVER PACKAGE [" << sched_getcpu() <<"] -- START UNLOCKING " << endl;
     mailbox[slot_num].packages->push(package);
+    cout << "DELIVER PACKAGE [" << sched_getcpu() <<"] -- DONE UNLOCKING " << endl;
     pthread_mutex_unlock(&lock);
 }
 

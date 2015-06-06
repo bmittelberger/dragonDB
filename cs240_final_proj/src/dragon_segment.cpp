@@ -40,22 +40,38 @@ dragon_segment::~dragon_segment() {
  */
 void dragon_segment::put(package& p) {
 
-    segment_entry *old_entry = get(p.contents.first);
-    if (old_entry && old_entry->timestamp > p.timestamp) {
-        return;
-    }
-    
-    segment_entry* entry = new segment_entry;
-    entry->value = p.contents.second;
-    entry->timestamp = p.timestamp;
+    cout << "SEGMENT PUT [" << sched_getcpu() <<"] SEGMENT[" << core_id << "] -- START LOCKING " << endl;
+    while (true) {
+        if (pthread_mutex_trylock(&segment_lock) == EBUSY) {
+            cout << "SEGMENT PUT [" << sched_getcpu() <<"] SEGMENT[" << core_id << "] -- DONE LOCKING " << endl;
 
-    pthread_mutex_lock(&segment_lock);
-    store[p.contents.first] = entry;
-    pthread_mutex_unlock(&segment_lock);
 
-    if (old_entry) {
-        delete old_entry;
+            segment_entry *old_entry = get(p.contents.first);
+            if (old_entry && old_entry->timestamp > p.timestamp) {
+                return;
+            }
+            
+            segment_entry* entry = new segment_entry;
+            entry->value = p.contents.second;
+            entry->timestamp = p.timestamp;
+
+            //old lock was here
+            store[p.contents.first] = entry;
+         
+
+            if (old_entry) {
+                delete old_entry;
+            }
+            cout << "SEGMENT PUT [" << sched_getcpu() <<"] SEGMENT[" << core_id << "] -- START UNLOCKING " << endl;
+            pthread_mutex_unlock(&segment_lock);
+            cout << "SEGMENT PUT [" << sched_getcpu() <<"] SEGMENT[" << core_id << "] -- DONE UNLOCKING " << endl;
+            break;
+        } else {
+            cout << "SEGMENT [" << sched_getcpu() << "] putting on [" << core_id << "] SPINNING" << endl;
+        }
+
     }
+
 };
 
 /* Gets a segment entry out of the segment's store. Uses no locks,
@@ -82,8 +98,12 @@ segment_entry* dragon_segment::get(string key) {
 //Each core flushes to a unique file corresponding to
 //that core/segment
 int dragon_segment::flush_to_disk() {
+    cout << "flushing to disk" << endl;
     struct stat sb;
 
+    
+   
+     
     //If a directory doesn't already exist for the dragon store, make one
     if (stat(filename.c_str(), &sb) != 0 && !S_ISDIR(sb.st_mode)) {
         string command = "mkdir " + filename;
@@ -102,6 +122,7 @@ int dragon_segment::flush_to_disk() {
     vector<string> out;
     map<string, segment_entry*>::iterator it;
     string output;
+    
     pthread_mutex_lock(&segment_lock);
     for (it = store.begin(); it != store.end(); it++){
         output = it->first + "," + it->second->value + "," + to_string(it->second->timestamp) + "\n";
@@ -129,6 +150,8 @@ int dragon_segment::flush_to_disk() {
         fs << out[i];
     }
     version_number ++;
+
+    cout << "done flushing" << endl;
 };
 
 
@@ -145,6 +168,7 @@ int dragon_segment::flush_to_disk() {
 int dragon_segment::load_from_disk() {
     string infile = filename + "/" + filename + "-" + to_string(core_id) + ".drg";
 
+    //pthread_mutex_lock(&segment_lock);
     ifstream is (infile, ios::in);
     cout << "reading from file " << infile << "..." << endl;
     
@@ -174,8 +198,8 @@ int dragon_segment::load_from_disk() {
         prev_segment_offset = cur_offset;
     }
 
-    /* TODO: ensure that the logic above still works even
-       with the checksum appended to segsize. */
+     //TODO: ensure that the logic above still works even
+       //with the checksum appended to segsize. 
     /* Extract the checksum. */
     string cksum_line;
     getline(is, cksum_line);
@@ -205,6 +229,9 @@ int dragon_segment::load_from_disk() {
         cksum ^= hash_str(workline);
     }
     
+    //pthread_mutex_unlock(&segment_lock);
+
+
     cout << "Done loading " << infile << endl;
     /* TODO: figure out what to do if cksum != disk_cksum. */
 
