@@ -146,11 +146,11 @@ int dragon_segment::load_from_disk() {
     string infile = filename + "/" + filename + "-" + to_string(core_id) + ".drg";
 
     ifstream is (infile, ios::in);
-    cout << "reading from file " << infile << "..." << endl;
+    //cout << "reading from file " << infile << "..." << endl;
     
     //if file doesn't exist, return
     if (!is.good()){
-        cout << "nothing to read" << endl;
+        //cout << "nothing to read" << endl;
         return -1;
     }
 
@@ -205,7 +205,7 @@ int dragon_segment::load_from_disk() {
         cksum ^= hash_str(workline);
     }
     
-    cout << "Done loading " << infile << endl;
+    //cout << "Done loading " << infile << endl;
     /* TODO: figure out what to do if cksum != disk_cksum. */
 
     /* TODO: why aren't we returning an int here? */

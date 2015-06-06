@@ -33,7 +33,8 @@ struct keyval {
 
 void* print_stuff(void* args) {    
     
-/*    for (int i = 0; i < 10001 ; i++) {
+/*  
+    for (int i = 0; i < 10001 ; i++) {
         string key(to_string(i));
         string value(to_string(i));
         db->db_put(key,value);
@@ -58,7 +59,7 @@ void* put(void* args) {
     keyval *kv;
     kv = (keyval *)args;
     db->db_put(kv->key, kv->value);
-    db->flush();
+    //db->flush();
 }
 
 
@@ -70,7 +71,7 @@ void *get(void* args) {
     if (val.compare(malformed) == 0) {
         cout << "KEY DOES NOT EXIST\n";
     } else {
-        cout << val << endl;
+        cout << kv->key << ": " << val << endl;
     }
 }
 
