@@ -104,12 +104,12 @@ int dragon_segment::flush_to_disk() {
     string output;
     pthread_mutex_lock(&segment_lock);
     for (it = store.begin(); it != store.end(); it++){
-        output = it->first + "," + it->second->value + "," + to_string(it->second->timestamp) + "\n";
+        output = it->first + "," + it->second->value + "," + to_string(it->second->timestamp);
         segment_size += it->first.length();
         segment_size += it->second->value.length();
         segment_size += (to_string(it->second->timestamp)).length();
         segment_size += 3; // for commas and endl
-        out.push_back(output);
+        out.push_back(output + "\n");
 
         cksum ^= hash_str(output);
     }
@@ -150,7 +150,7 @@ int dragon_segment::load_from_disk() {
     
     //if file doesn't exist, return
     if (!is.good()){
-        cout << "nothing to read" << endl;
+        //cout << "nothing to read" << endl;
         return -1;
     }
 
@@ -180,14 +180,11 @@ int dragon_segment::load_from_disk() {
     /* Extract the checksum. */
     while (true) {
         is.clear();
-        cout << "setting to offset " << cur_offset << endl;
         is.seekg(cur_offset, iostream::beg);
 
-        cout << "now at offset " << is.tellg() << endl;
         string cksum_line;
         getline(is, cksum_line);
 
-        cout << "checksum line: " << cksum_line << endl;
         size_t disk_cksum = stoull(cksum_line);
         size_t cksum = 0;
 
@@ -197,6 +194,9 @@ int dragon_segment::load_from_disk() {
             string workline = line;
             //tokenize string by commas
             auto find = workline.find(",");
+            if (find == string::npos) {
+                break;
+            }
             string key = workline.substr(0,find);
             workline = workline.substr(find+1,line.length());
             find = workline.find(",");
@@ -211,30 +211,72 @@ int dragon_segment::load_from_disk() {
 
             store[key] = entry;
 
-            cksum ^= hash_str(workline);
+            cksum ^= hash_str(line);
         }
+
 
         if (disk_cksum != cksum){
             if (cur_offset == prev_segment_offset || prev_segment_offset == 0) {
                 cout << "ERROR: FILE [" << core_id << "] IS CORRUPTED" << endl;
                 exit(1);
             } else {
-                cout << "checksums don't match" << endl;
-                cout << "curroffset: " << cur_offset << endl;
-                cout << "prevoffset:" << prev_segment_offset << endl;
                 cur_offset = prev_segment_offset;
             }
         } else {
             break;
         }
 
+
     }
-    
+    clean_file(infile);
+
     cout << "Done loading " << infile << endl;
     /* TODO: figure out what to do if cksum != disk_cksum. */
 
     /* TODO: why aren't we returning an int here? */
 };
+
+
+/* This function takes the most recent full segment
+ * and writes it out to a fresh file without the rest 
+ * of the dead entries in the previous log */
+void dragon_segment::clean_file(string filename) {
+    string tmpfile = filename + ".tmp";
+    ofstream fs(tmpfile.c_str(), ofstream::app);
+    vector<string> out;
+    map<string, segment_entry*>::iterator it;
+    string output;
+    size_t cksum = 0;
+    int segment_size = 0;
+    pthread_mutex_lock(&segment_lock);
+    for (it = store.begin(); it != store.end(); it++){
+        output = it->first + "," + it->second->value + "," + to_string(it->second->timestamp);
+        segment_size += it->first.length();
+        segment_size += it->second->value.length();
+        segment_size += (to_string(it->second->timestamp)).length();
+        segment_size += 3; // for commas and endl
+        out.push_back(output + "\n");
+        cksum ^= hash_str(output);
+    }
+    pthread_mutex_unlock(&segment_lock);
+    
+    segment_size += to_string(cksum).length() + 1; //+1 is for newline
+    fs << segment_size;
+    fs << "\n" ;
+    //Write checksum here
+    fs << to_string(cksum);
+    fs << "\n";
+    for (int i = 0; i < out.size(); i++){
+        fs << out[i];
+    }
+    string command = "mv " + filename + " " + filename + ".tmp2";
+    system(command.c_str());
+    command = "mv " + tmpfile + " " + filename;
+    system(command.c_str());
+    command = "rm -rf " + filename + ".tmp2";
+    system(command.c_str());
+
+}
 
 size_t dragon_segment::hash_str(string input) {
 

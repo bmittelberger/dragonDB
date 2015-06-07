@@ -81,7 +81,9 @@ void dragon_core::put(string key, string value) {
 
     /* Determine which core's segment the key belongs on. */
     int dest_core_id = map_to_core(key);
+
     // cout << "Current thread " << sched_getcpu() << " Dest_core: " << dest_core_id << endl;
+
 
     /* If the segment is owned locally, perform the put. */
     if (dest_core_id == this->core_id) { 
@@ -123,7 +125,9 @@ string dragon_core::get(string key) {
     /* Determine which core's segment the key belongs on. */
     int dest_core = map_to_core(key);
 
+
     // cout << "Current thread " << sched_getcpu() << " Dest_core: " << dest_core << endl;
+
 
     /* Check to see if an entry exists for this key. */
     dragon_segment* segment = db->get_segment(dest_core);

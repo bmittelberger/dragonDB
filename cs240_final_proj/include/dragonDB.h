@@ -67,6 +67,7 @@ public:
     int load_from_disk();
     void lock_segment();
     void unlock_segment();
+    void clean_file(string filename);
 };
 
 
