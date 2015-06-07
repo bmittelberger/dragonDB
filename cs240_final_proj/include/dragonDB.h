@@ -23,7 +23,9 @@
 #include <iostream>
 #include <stdio.h>
 #include <chrono>
-
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <time.h>
 
 using namespace std;

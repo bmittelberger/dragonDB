@@ -93,6 +93,8 @@ int dragon_segment::flush_to_disk() {
     uint64_t segment_size = 0; //start at 1 for newline after size write
     ofstream fs(outfile.c_str(), ofstream::app);
     write_segment(fs);
+    int fd = open (outfile.c_str(),O_WRONLY);
+    fsync(fd);
 };
 
 
