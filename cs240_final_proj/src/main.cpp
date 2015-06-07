@@ -24,6 +24,8 @@
 #define WR_ONLY 5
 #define R_ONLY 6
 
+#define STRONG 7
+
 using namespace std;
 
 uint64_t start;
@@ -86,6 +88,35 @@ void *gets_test(void* args) {
     }
 }
 
+/* Tests immediate consistency of the KV store. */
+void* strong_consistency_test(void * args) {
+    
+    db->set_consistency(true); 
+
+    int max = 1000;
+    for (int i = 0; i < max ; i++) {
+        string key(to_string(i));
+        string value(to_string(i));
+
+        if (i % 100)
+            cout << ".";
+
+        db->db_put(key,value);
+
+        string store_val = db->db_get(key);
+
+        /* Writes must be reflected immediately. */
+        if (value != store_val) {
+            cout << "strong_consistency_test: ERROR -- MISMATCH ON K/V PAIR" << endl;
+            exit(-1);
+        }
+    }
+
+    cout << endl;
+    cout << "strong_consistency_test: PASSED" << endl;
+
+    db->set_consistency(false);
+}
 
 void* put(void* args) {
     keyval *kv;
@@ -249,6 +280,8 @@ void test(pthread_t threads[], int cores_used[],
         cout << "writes only" << endl;
     } else if (flag == R_ONLY) {
         cout << "read only" << endl;
+    } else if (flag == STRONG) {
+        cout << "testing strong consistency" << endl;
     }
 
     pthread_attr_t attr;
@@ -267,9 +300,10 @@ void test(pthread_t threads[], int cores_used[],
             pthread_create(&threads[i], &attr, mixed_gets_puts_test, NULL);
         } else if (flag == WR_ONLY) {
             pthread_create(&threads[i], &attr, puts_test, NULL);
-        } else {
-
+        } else if (flag == R_ONLY) {
             pthread_create(&threads[i], &attr, gets_test, NULL);
+        } else if (flag == STRONG) {
+            pthread_create(&threads[i], &attr, strong_consistency_test, NULL);
         }
     }
 
@@ -316,6 +350,8 @@ int main(int argc, const char * argv[]) {
     //test(threads, cores_used, num_cores, MIXED);
     //test(threads, cores_used, num_cores, WR_ONLY);
     //test(threads, cores_used, num_cores, R_ONLY);
+    //test(threads, cores_used, num_cores, STRONG);
+
 
     //Read commands from file or command line
     uint64_t start = db->get_time();

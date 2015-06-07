@@ -23,7 +23,9 @@
 #include <iostream>
 #include <stdio.h>
 #include <chrono>
-
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <time.h>
 
 using namespace std;
@@ -157,6 +159,7 @@ public:
     void close();
     
     void set_consistency(bool is_strong);
+    bool is_strongly_consistent();
 
     uint64_t get_time();
 };
