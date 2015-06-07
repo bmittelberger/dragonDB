@@ -303,8 +303,8 @@ int main(int argc, const char * argv[]) {
     pthread_t threads[num_cores];
     int cores_used[num_cores];
 
-    //test(threads, cores_used, num_cores, MIXED);
-    test(threads, cores_used, num_cores, WR_ONLY);
+    test(threads, cores_used, num_cores, MIXED);
+    //test(threads, cores_used, num_cores, WR_ONLY);
     //test(threads, cores_used, num_cores, R_ONLY);
 
 
