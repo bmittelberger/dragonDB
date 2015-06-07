@@ -38,7 +38,7 @@ struct keyval {
 
 
 void* mixed_gets_puts_test(void* args) {    
-    int max = 10000;
+    int max = 100000;
     for (int i = 0; i < max ; i++) {
         string key(to_string(i));
         string value(to_string(i));
@@ -233,6 +233,7 @@ void read_commands(string filename, pthread_t threads[],
 
             myfile.close();
         } else {
+            cout << filename << endl;
             cout << "You need to specify a correct dragonDB key-value store\n";
         }
 
@@ -322,7 +323,7 @@ int main(int argc, const char * argv[]) {
     uint64_t end = db->get_time();
     uint64_t time_elapsed = (end - start)/num_cores;
     cout << num_cores << " threads : " << time_elapsed << " milliseconds\n";
-
+    
 
     return 0;
 }
