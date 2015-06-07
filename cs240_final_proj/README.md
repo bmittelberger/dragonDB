@@ -28,8 +28,10 @@ Claudia Roberts (https://github.com/chicacvr)
 
 	Then, initialize the virtual machine by issuing the following commands in the lab2 directory:
 
-	`vagrant up #this could take 10-15 minutes`
-	`vagrant ssh`
+	```
+  vagrant up #this could take 10-15 minutes
+	vagrant ssh
+  ```
 
 	To put the VM to sleep, you can run `vagrant suspend`. `vagrant up` brings the machine back up. 
 	When/if you're done with the datastore, you can reclaim your resources by issuing `vagrant destroy`. 
@@ -41,10 +43,12 @@ Claudia Roberts (https://github.com/chicacvr)
 
 3. Clone the dragonDB repository into the lab2 directory on your virtual machine. After ssh'ing into
    your virtual machine, issue the following commands:
-   `cd lab2
+   ```
+   cd lab2
    git clone https://github.com/bmittelberger/dragonDB
    cd dragonDB/cs240_final_proj
-   make`
+   make
+   ```
 
    This will generate the dragonDB executable.
 
@@ -59,16 +63,19 @@ Claudia Roberts (https://github.com/chicacvr)
 	Navigate to the `cs_240_final_proj` directory. In src/main.cpp, around line 315, 
 	there are lines: 
 
-	`
+	
+    ```
     test(threads, cores_used, num_cores, MIXED);
     test(threads, cores_used, num_cores, R_ONLY);
-    `
+    ```
 
     Comment out the second R_ONLY line if you'd like to see the performance of 
     how the database handles a mixed read-and-write workload.
 
 	**Large reads:**
-	Navigate to the 
+	Navigate to the `cs_240_final_proj` directory, and in src/main.cpp, make
+  sure the line test(threads, cores_used, num_cores, R_ONLY) is commented
+  in.
 
 5. To interact with the key-value store and dynamically create/manipulate a 
    key-value store on the fly, from the cs240_final_proj directory, run:
