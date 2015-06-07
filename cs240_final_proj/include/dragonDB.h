@@ -68,6 +68,7 @@ public:
     void lock_segment();
     void unlock_segment();
     void clean_file(string filename);
+    void write_segment(ofstream &fs);
 };
 
 

@@ -89,19 +89,26 @@ int dragon_segment::flush_to_disk() {
         string command = "mkdir " + filename;
         system(command.c_str());
     }
-
     string outfile = filename + "/" + filename + "-" + to_string(core_id) + ".drg";
     uint64_t segment_size = 0; //start at 1 for newline after size write
-
     ofstream fs(outfile.c_str(), ofstream::app);
+    write_segment(fs);
+};
 
-    /* Keep track of a running checksum. */
-    size_t cksum = 0;
 
-    //THIS IS REALLY SHITTY -- FIND A WAY TO DO IT IN A SINGLE PASS
+/* Takes in the file stream to write to and writes out the entirety
+ * of the core segment's memory into a segment on the disk. It creates
+ * a segment size line as a pointer to the next segment in the file, and
+ * it checksums the data to ensure durability 
+ *
+ * @param fs filestream pointing to the file where we want to write the segment
+ */
+void dragon_segment::write_segment(ofstream &fs) {
     vector<string> out;
     map<string, segment_entry*>::iterator it;
     string output;
+    size_t cksum = 0;
+    int segment_size = 0;
     pthread_mutex_lock(&segment_lock);
     for (it = store.begin(); it != store.end(); it++){
         output = it->first + "," + it->second->value + "," + to_string(it->second->timestamp);
@@ -110,28 +117,21 @@ int dragon_segment::flush_to_disk() {
         segment_size += (to_string(it->second->timestamp)).length();
         segment_size += 3; // for commas and endl
         out.push_back(output + "\n");
-
         cksum ^= hash_str(output);
     }
     pthread_mutex_unlock(&segment_lock);
     
     segment_size += to_string(cksum).length() + 1; //+1 is for newline
-
-
     fs << segment_size;
     fs << "\n" ;
-    
     //Write checksum here
     fs << to_string(cksum);
     fs << "\n";
-
     for (int i = 0; i < out.size(); i++){
         fs << out[i];
     }
-    version_number ++;
-};
-
-
+    fs.flush();
+}
 
 
 
@@ -175,9 +175,7 @@ int dragon_segment::load_from_disk() {
         prev_segment_offset = cur_offset;
     }
 
-    /* TODO: ensure that the logic above still works even
-       with the checksum appended to segsize. */
-    /* Extract the checksum. */
+    /* Build segment in memory and compute checksum. */
     while (true) {
         is.clear();
         is.seekg(cur_offset, iostream::beg);
@@ -208,18 +206,17 @@ int dragon_segment::load_from_disk() {
             segment_entry *entry = new segment_entry;
             entry->value = value;
             entry->timestamp = timestamp;
-
             store[key] = entry;
-
             cksum ^= hash_str(line);
         }
 
-
+        // Ensure that the current segment hasn't been corrupted
         if (disk_cksum != cksum){
             if (cur_offset == prev_segment_offset || prev_segment_offset == 0) {
                 cout << "ERROR: FILE [" << core_id << "] IS CORRUPTED" << endl;
                 exit(1);
             } else {
+                store.clear();  
                 cur_offset = prev_segment_offset;
             }
         } else {
@@ -243,32 +240,7 @@ int dragon_segment::load_from_disk() {
 void dragon_segment::clean_file(string filename) {
     string tmpfile = filename + ".tmp";
     ofstream fs(tmpfile.c_str(), ofstream::app);
-    vector<string> out;
-    map<string, segment_entry*>::iterator it;
-    string output;
-    size_t cksum = 0;
-    int segment_size = 0;
-    pthread_mutex_lock(&segment_lock);
-    for (it = store.begin(); it != store.end(); it++){
-        output = it->first + "," + it->second->value + "," + to_string(it->second->timestamp);
-        segment_size += it->first.length();
-        segment_size += it->second->value.length();
-        segment_size += (to_string(it->second->timestamp)).length();
-        segment_size += 3; // for commas and endl
-        out.push_back(output + "\n");
-        cksum ^= hash_str(output);
-    }
-    pthread_mutex_unlock(&segment_lock);
-    
-    segment_size += to_string(cksum).length() + 1; //+1 is for newline
-    fs << segment_size;
-    fs << "\n" ;
-    //Write checksum here
-    fs << to_string(cksum);
-    fs << "\n";
-    for (int i = 0; i < out.size(); i++){
-        fs << out[i];
-    }
+    write_segment(fs);
     string command = "mv " + filename + " " + filename + ".tmp2";
     system(command.c_str());
     command = "mv " + tmpfile + " " + filename;
@@ -279,16 +251,13 @@ void dragon_segment::clean_file(string filename) {
 }
 
 size_t dragon_segment::hash_str(string input) {
-
     /* Start with some primes. */
     size_t hash = 937;
     size_t p1 = 37;
     size_t p2 = 79;
-
     for (int i = 0; i < input.size(); i++) {
         hash = hash * p1 ^ ((int) input[i] * p2);
     }
-
     return hash;
 }
 
