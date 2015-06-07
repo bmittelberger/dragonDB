@@ -33,7 +33,8 @@ struct keyval {
 
 void* print_stuff(void* args) {    
     
-/*    for (int i = 0; i < 10001 ; i++) {
+    int max = 10;
+    for (int i = 0; i < max ; i++) {
         string key(to_string(i));
         string value(to_string(i));
         db->db_put(key,value);
@@ -41,17 +42,17 @@ void* print_stuff(void* args) {
 
     db->flush();
 
-    for (int i = 0; i < 25 ; i++) {
+    for (int i = 0; i < max ; i++) {
         string key(to_string(i));
         string val = db->db_get(key);
-        //cout << "CPU: " << sched_getcpu() ;
-        //cout << " -- for string " << key << ", got value " << val << endl;
+        // cout << "CPU: " << sched_getcpu() ;
+        // cout << " -- for string " << key << ", got value " << val << endl;
         if (key != val) {
             cout << "ERROR -- MISMATCH ON KEY/VAL PAIR" << endl;
             exit(1);
         }
     }
-*/
+
 }
 
 void* put(void* args) {
@@ -203,7 +204,7 @@ void read_commands(string filename, pthread_t threads[],
 
 int main(int argc, const char * argv[]) {
     // INITIALIZATION 
-    int nc = 2;
+    int nc = 4;
     string filename = "";
 
     if (argc > 1) {
@@ -221,7 +222,7 @@ int main(int argc, const char * argv[]) {
     	exit(0);
     }
     
-    //db = new dragon_db("no_file.txt", num_cores);
+    db = new dragon_db("no_file", num_cores);
     //Create threads for each core
     pthread_t threads[num_cores];
     int cores_used[num_cores];
@@ -248,7 +249,7 @@ int main(int argc, const char * argv[]) {
     }
 
     //Read commands
-    read_commands(filename, threads, cores_used, num_cores);
+    //read_commands(filename, threads, cores_used, num_cores);
 
     return 0;
 }

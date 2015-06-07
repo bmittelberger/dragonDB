@@ -165,10 +165,11 @@ int dragon_segment::load_from_disk() {
 
     int prev_segment_offset = 0;
     string line;
+    int cur_offset = 0;
     while (true) {
         getline(is,line);
         int segment_size = stoi(line);
-        int cur_offset = is.tellg();
+        cur_offset = is.tellg();
         if (cur_offset + segment_size >= filesize) break;
         is.seekg(segment_size, iostream::cur);
         prev_segment_offset = cur_offset;
@@ -177,32 +178,56 @@ int dragon_segment::load_from_disk() {
     /* TODO: ensure that the logic above still works even
        with the checksum appended to segsize. */
     /* Extract the checksum. */
-    string cksum_line;
-    getline(is, cksum_line);
-    size_t disk_cksum = stoull(cksum_line);
-    size_t cksum = 0;
+    while (true) {
+        is.clear();
+        cout << "setting to offset " << cur_offset << endl;
+        is.seekg(cur_offset, iostream::beg);
 
-    //iterate through all lines of the segment
-    while (getline(is,line)) {
+        cout << "now at offset " << is.tellg() << endl;
+        string cksum_line;
+        getline(is, cksum_line);
 
-        string workline = line;
-        //tokenize string by commas
-        auto find = workline.find(",");
-        string key = workline.substr(0,find);
-        workline = workline.substr(find+1,line.length());
-        find = workline.find(",");
-        string value = workline.substr(0,find);
-        string timestamp_str = workline.substr(find+1,line.length());
-        uint64_t timestamp = stoull(timestamp_str);
+        cout << "checksum line: " << cksum_line << endl;
+        size_t disk_cksum = stoull(cksum_line);
+        size_t cksum = 0;
 
-        //Build the segment        
-        segment_entry *entry = new segment_entry;
-        entry->value = value;
-        entry->timestamp = timestamp;
+        //iterate through all lines of the segment
+        while (getline(is,line)) {
 
-        store[key] = entry;
+            string workline = line;
+            //tokenize string by commas
+            auto find = workline.find(",");
+            string key = workline.substr(0,find);
+            workline = workline.substr(find+1,line.length());
+            find = workline.find(",");
+            string value = workline.substr(0,find);
+            string timestamp_str = workline.substr(find+1,line.length());
+            uint64_t timestamp = stoull(timestamp_str);
 
-        cksum ^= hash_str(workline);
+            //Build the segment        
+            segment_entry *entry = new segment_entry;
+            entry->value = value;
+            entry->timestamp = timestamp;
+
+            store[key] = entry;
+
+            cksum ^= hash_str(workline);
+        }
+
+        if (disk_cksum != cksum){
+            if (cur_offset == prev_segment_offset || prev_segment_offset == 0) {
+                cout << "ERROR: FILE [" << core_id << "] IS CORRUPTED" << endl;
+                exit(1);
+            } else {
+                cout << "checksums don't match" << endl;
+                cout << "curroffset: " << cur_offset << endl;
+                cout << "prevoffset:" << prev_segment_offset << endl;
+                cur_offset = prev_segment_offset;
+            }
+        } else {
+            break;
+        }
+
     }
     
     cout << "Done loading " << infile << endl;
