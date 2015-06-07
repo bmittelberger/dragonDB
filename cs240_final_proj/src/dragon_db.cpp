@@ -124,14 +124,10 @@ void dragon_db::set_consistency(bool is_strong) {
     consistent = is_strong;
 }
 
-
-
-
-
-
-
-
-
-
-
+/* Returns the consistency value for the database - true if strongly
+ * consistent, and false if eventual consistency is allowed.
+ */
+bool dragon_db::is_strongly_consistent() {
+    return consistent;
+}
 

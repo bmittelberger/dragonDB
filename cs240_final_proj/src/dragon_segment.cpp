@@ -40,8 +40,12 @@ dragon_segment::~dragon_segment() {
  */
 void dragon_segment::put(package& p) {
 
+    pthread_mutex_lock(&segment_lock);
+
     segment_entry *old_entry = get(p.contents.first);
+
     if (old_entry && old_entry->timestamp > p.timestamp) {
+        pthread_mutex_unlock(&segment_lock);
         return;
     }
     
@@ -49,13 +53,12 @@ void dragon_segment::put(package& p) {
     entry->value = p.contents.second;
     entry->timestamp = p.timestamp;
 
-    pthread_mutex_lock(&segment_lock);
     store[p.contents.first] = entry;
-    pthread_mutex_unlock(&segment_lock);
-
     if (old_entry) {
         delete old_entry;
     }
+
+    pthread_mutex_unlock(&segment_lock);
 };
 
 /* Gets a segment entry out of the segment's store. Uses no locks,
@@ -90,11 +93,15 @@ int dragon_segment::flush_to_disk() {
         system(command.c_str());
     }*/
     string outfile = filename + "-" + to_string(core_id) + ".drg";
-    uint64_t segment_size = 0; //start at 1 for newline after size write
+
+    pthread_mutex_lock(&segment_lock);
+
     ofstream fs(outfile.c_str(), ofstream::app);
     write_segment(fs);
     int fd = open (outfile.c_str(),O_WRONLY);
     fsync(fd);
+
+    pthread_mutex_unlock(&segment_lock);
 };
 
 
@@ -103,15 +110,19 @@ int dragon_segment::flush_to_disk() {
  * a segment size line as a pointer to the next segment in the file, and
  * it checksums the data to ensure durability 
  *
+ * NOTE: this function assumes that segment_lock has already been obtained,
+ * as this entire function sits in the critical section.
+ *
  * @param fs filestream pointing to the file where we want to write the segment
  */
 void dragon_segment::write_segment(ofstream &fs) {
     vector<string> out;
     map<string, segment_entry*>::iterator it;
     string output;
+
     size_t cksum = 0;
     int segment_size = 0;
-    pthread_mutex_lock(&segment_lock);
+
     for (it = store.begin(); it != store.end(); it++){
         output = it->first + "," + it->second->value + "," + to_string(it->second->timestamp);
         segment_size += it->first.length();
@@ -121,14 +132,15 @@ void dragon_segment::write_segment(ofstream &fs) {
         out.push_back(output + "\n");
         cksum ^= hash_str(output);
     }
-    pthread_mutex_unlock(&segment_lock);
     
     segment_size += to_string(cksum).length() + 1; //+1 is for newline
     fs << segment_size;
     fs << "\n" ;
-    //Write checksum here
+
+    // Write checksum here
     fs << to_string(cksum);
     fs << "\n";
+
     for (int i = 0; i < out.size(); i++){
         fs << out[i];
     }
@@ -240,6 +252,9 @@ int dragon_segment::load_from_disk() {
  * and writes it out to a fresh file without the rest 
  * of the dead entries in the previous log */
 void dragon_segment::clean_file(string filename) {
+
+    pthread_mutex_lock(&segment_lock);
+
     string tmpfile = filename + ".tmp";
     ofstream fs(tmpfile.c_str(), ofstream::app);
     write_segment(fs);
@@ -250,6 +265,7 @@ void dragon_segment::clean_file(string filename) {
     command = "rm -rf " + filename + ".tmp2";
     system(command.c_str());
 
+    pthread_mutex_unlock(&segment_lock);
 }
 
 size_t dragon_segment::hash_str(string input) {

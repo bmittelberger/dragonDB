@@ -159,6 +159,7 @@ public:
     void close();
     
     void set_consistency(bool is_strong);
+    bool is_strongly_consistent();
 
     uint64_t get_time();
 };

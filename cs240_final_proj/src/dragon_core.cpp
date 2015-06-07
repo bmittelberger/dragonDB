@@ -82,11 +82,8 @@ void dragon_core::put(string key, string value) {
     /* Determine which core's segment the key belongs on. */
     int dest_core_id = map_to_core(key);
 
-    // cout << "Current thread " << sched_getcpu() << " Dest_core: " << dest_core_id << endl;
-
-
-    /* If the segment is owned locally, perform the put. */
-    if (dest_core_id == this->core_id) { 
+    /* If the segment owned locally (or strong consistency), perform put immediately. */
+    if (dest_core_id == this->core_id || db->is_strongly_consistent()) { 
 
         dragon_segment* segment = db->get_segment(dest_core_id);
         if (!segment) cout << "segment is null" << endl;
@@ -101,13 +98,26 @@ void dragon_core::put(string key, string value) {
         dest_core->deliver_package(this->core_id, p);
     }
     
-    /* Flush the local core's mailbox periodically. */
-    if (db->get_time() - mailbox_last_checked > mailbox_rate) {
-        flush_mailbox();
-    }
-    if (db->get_time() - disk_flush_last_done > db->disk_flush_rate){
-        dragon_segment * segment = db->get_segment(core_id);
-        segment->flush_to_disk();
+    /* Flush the entire store immediately if strong consistency is specified. */
+    if (db->is_strongly_consistent()) {
+
+        for (int i = 0; i < num_cores; i++) {
+            dragon_segment *segment = db->get_segment(i);
+            segment->flush_to_disk();
+        }
+
+    /* Flush periodically if eventual consistency is specified. */
+    } else {
+        /* Flush the local core's mailbox periodically. */
+        if (db->get_time() - mailbox_last_checked > mailbox_rate) {
+            flush_mailbox();
+        }
+
+        /* Flush the local segment to disk periodically. */
+        if (db->get_time() - disk_flush_last_done > db->disk_flush_rate){
+            dragon_segment *segment = db->get_segment(core_id);
+            segment->flush_to_disk();
+        }
     }
 }
 
@@ -124,10 +134,6 @@ string dragon_core::get(string key) {
 
     /* Determine which core's segment the key belongs on. */
     int dest_core = map_to_core(key);
-
-
-    // cout << "Current thread " << sched_getcpu() << " Dest_core: " << dest_core << endl;
-
 
     /* Check to see if an entry exists for this key. */
     dragon_segment* segment = db->get_segment(dest_core);
