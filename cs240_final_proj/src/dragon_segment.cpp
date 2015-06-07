@@ -104,12 +104,12 @@ int dragon_segment::flush_to_disk() {
     string output;
     pthread_mutex_lock(&segment_lock);
     for (it = store.begin(); it != store.end(); it++){
-        output = it->first + "," + it->second->value + "," + to_string(it->second->timestamp) + "\n";
+        output = it->first + "," + it->second->value + "," + to_string(it->second->timestamp);
         segment_size += it->first.length();
         segment_size += it->second->value.length();
         segment_size += (to_string(it->second->timestamp)).length();
         segment_size += 3; // for commas and endl
-        out.push_back(output);
+        out.push_back(output + "\n");
 
         cksum ^= hash_str(output);
     }
@@ -202,7 +202,7 @@ int dragon_segment::load_from_disk() {
 
         store[key] = entry;
 
-        cksum ^= hash_str(workline);
+        cksum ^= hash_str(line);
     }
     
     //cout << "Done loading " << infile << endl;
