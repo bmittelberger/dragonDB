@@ -20,6 +20,10 @@
 #define PUT 2
 #define CLOSE 3
 
+#define MIXED 4
+#define WR_ONLY 5
+#define R_ONLY 6
+
 using namespace std;
 
 string store_name;
@@ -31,10 +35,8 @@ struct keyval {
 };
 
 
-void* print_stuff(void* args) {    
-    
-
-    int max = 100;
+void* mixed_gets_puts_test(void* args) {    
+    int max = 10000;
     for (int i = 0; i < max ; i++) {
         string key(to_string(i));
         string value(to_string(i));
@@ -46,8 +48,8 @@ void* print_stuff(void* args) {
     for (int i = 0; i < max ; i++) {
         string key(to_string(i));
         string val = db->db_get(key);
-        // cout << "CPU: " << sched_getcpu() ;
-        // cout << " -- for string " << key << ", got value " << val << endl;
+        //cout << "CPU: " << sched_getcpu() ;
+        //cout << " -- for string " << key << ", got value " << val << endl;
         if (key != val) {
             cout << "ERROR -- MISMATCH ON KEY/VAL PAIR" << endl;
             exit(1);
@@ -55,6 +57,33 @@ void* print_stuff(void* args) {
     }
 
 }
+
+
+void* puts_test(void* args) {    
+    int max = 100000;
+    for (int i = 0; i < max ; i++) {
+        string key(to_string(i));
+        string value(to_string(i));
+        db->db_put(key,value);
+    }
+    db->flush();
+}
+
+
+void *gets_test(void* args) {
+    int max = 100000;
+    for (int i = 0; i < max ; i++) {
+        string key(to_string(i));
+        string val = db->db_get(key);
+        //cout << "CPU: " << sched_getcpu() ;
+        //cout << " -- for string " << key << ", got value " << val << endl;
+        if (key != val) {
+            cout << "ERROR -- MISMATCH ON KEY/VAL PAIR" << endl;
+            exit(1);
+        }
+    }
+}
+
 
 void* put(void* args) {
     keyval *kv;
@@ -203,9 +232,55 @@ void read_commands(string filename, pthread_t threads[],
 }
 
 
+void test(pthread_t threads[], int cores_used[], 
+    const int num_cores, int flag) {
+    if (flag == MIXED) {
+        cout << "MIXED gets and puts" << endl;
+    } else if (flag == WR_ONLY) {
+        cout << "writes only" << endl;
+    } else if (flag == R_ONLY) {
+        cout << "read only" << endl;
+    }
+
+    pthread_attr_t attr;
+    cpu_set_t cpus;
+    pthread_attr_init(&attr);
+
+    uint64_t start = db->get_time();
+
+    //While threads being initialized, their cores are set to busy
+    for (int i = 0; i < num_cores; i++) {
+        CPU_ZERO(&cpus);
+        CPU_SET(i, &cpus);
+        pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpus);
+        cores_used[i] = 1;
+        if (flag == MIXED) {
+            pthread_create(&threads[i], &attr, mixed_gets_puts_test, NULL);
+        } else if (flag == WR_ONLY) {
+            pthread_create(&threads[i], &attr, puts_test, NULL);
+        } else {
+            pthread_create(&threads[i], &attr, gets_test, NULL);
+        }
+    }
+
+    for (int i = 0; i < num_cores; i++) {
+       pthread_join(threads[i], NULL);
+    }
+
+    //Cores not in use any more
+    for (int i = 0; i < num_cores; i++) {
+       cores_used[i] = 0;
+    }
+
+    uint64_t end = db->get_time();
+    uint64_t time_elapsed = (end - start)/num_cores;
+    cout << num_cores << " threads : " << time_elapsed << " milliseconds\n";
+}
+
+
 int main(int argc, const char * argv[]) {
     // INITIALIZATION 
-    int nc = 4;
+    int nc = 2;
     string filename = "";
 
     if (argc > 1) {
@@ -223,31 +298,15 @@ int main(int argc, const char * argv[]) {
     	exit(0);
     }
     
-    db = new dragon_db("no_file", num_cores);
+    db = new dragon_db("testdb", num_cores);
     //Create threads for each core
     pthread_t threads[num_cores];
     int cores_used[num_cores];
-    pthread_attr_t attr;
-    cpu_set_t cpus;
-    pthread_attr_init(&attr);
 
-    //While threads being initialized, their cores are set to busy
-    for (int i = 0; i < num_cores; i++) {
-        CPU_ZERO(&cpus);
-        CPU_SET(i, &cpus);
-	    pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpus);
-	    cores_used[i] = 1;
-        pthread_create(&threads[i], &attr, print_stuff, NULL);
-    }
+    //test(threads, cores_used, num_cores, MIXED);
+    test(threads, cores_used, num_cores, WR_ONLY);
+    //test(threads, cores_used, num_cores, R_ONLY);
 
-    for (int i = 0; i < num_cores; i++) {
-	   pthread_join(threads[i], NULL);
-    }
-
-    //Cores not in use any more
-    for (int i = 0; i < num_cores; i++) {
-	   cores_used[i] = 0;
-    }
 
     //Read commands
     //read_commands(filename, threads, cores_used, num_cores);
