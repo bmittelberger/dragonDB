@@ -142,9 +142,6 @@ int set_thread(string key, string value, pthread_t threads[],
         pthread_join(threads[rand_cpu], NULL);
     } else if (flag == CLOSE) {
         //Make sure all threads have finished writing
-        for (int i = 0; i < num_cores; i++) {
-           pthread_join(threads[i], NULL);
-        }
         pthread_create(&threads[rand_cpu], &attr, close, NULL);
     }
 
@@ -174,6 +171,9 @@ void process_lines(pthread_t threads[],
         value = "";
         tu = set_thread(key, value, threads, cores_used, num_cores, GET);
     } else if (command.compare(close) == 0) {
+        for (int i = 0; i < num_cores; i++) {
+           pthread_join(threads[i], NULL);
+        }
         tu = set_thread(key, value, threads, cores_used, num_cores, CLOSE);
     } else {
         cout << "Invalid command\n";
@@ -219,7 +219,7 @@ void read_commands(string filename, pthread_t threads[],
         for (int i=0; i< num_cores; i++) {
            pthread_join(threads[i], NULL);
         }
-
+        db->close();
     } else {
         ifstream myfile(filename);
         if (myfile) {
@@ -227,10 +227,10 @@ void read_commands(string filename, pthread_t threads[],
                 read_file(line, threads, cores_used, num_cores);
              }
             
-            for (int i=0; i< num_cores; i++) {
+            /*for (int i=0; i< num_cores; i++) {
                pthread_join(threads[i], NULL);
-            }
-
+            }*/
+            //db->close();
             myfile.close();
         } else {
             cout << filename << endl;

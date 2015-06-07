@@ -20,6 +20,5 @@ for THREAD in `seq 1 $NUMTHREADS`; do # perform each test
     sleep $TIME
     echo "----"
   done
-  
   rm $STORES
 done
