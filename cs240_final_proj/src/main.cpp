@@ -26,6 +26,8 @@
 
 using namespace std;
 
+uint64_t start;
+uint64_t end;
 string store_name;
 dragon_db *db;
 
@@ -134,9 +136,15 @@ int set_thread(string key, string value, pthread_t threads[],
     pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpus);
     if (flag == GET) {
         pthread_create(&threads[rand_cpu], &attr, get,  (void *)kv);
+        pthread_join(threads[rand_cpu], NULL);
     } else if (flag == PUT) {
         pthread_create(&threads[rand_cpu], &attr, put,  (void *)kv);
+        pthread_join(threads[rand_cpu], NULL);
     } else if (flag == CLOSE) {
+        //Make sure all threads have finished writing
+        for (int i = 0; i < num_cores; i++) {
+           pthread_join(threads[i], NULL);
+        }
         pthread_create(&threads[rand_cpu], &attr, close, NULL);
     }
 
@@ -259,6 +267,7 @@ void test(pthread_t threads[], int cores_used[],
         } else if (flag == WR_ONLY) {
             pthread_create(&threads[i], &attr, puts_test, NULL);
         } else {
+
             pthread_create(&threads[i], &attr, gets_test, NULL);
         }
     }
@@ -298,18 +307,22 @@ int main(int argc, const char * argv[]) {
     	exit(0);
     }
     
-    db = new dragon_db("testdb", num_cores);
+    //db = new dragon_db("no_file", num_cores);
     //Create threads for each core
     pthread_t threads[num_cores];
     int cores_used[num_cores];
 
-    test(threads, cores_used, num_cores, MIXED);
+    //test(threads, cores_used, num_cores, MIXED);
     //test(threads, cores_used, num_cores, WR_ONLY);
     //test(threads, cores_used, num_cores, R_ONLY);
 
+    //Read commands from file or command line
+    uint64_t start = db->get_time();
+    read_commands(filename, threads, cores_used, num_cores);
+    uint64_t end = db->get_time();
+    uint64_t time_elapsed = (end - start)/num_cores;
+    cout << num_cores << " threads : " << time_elapsed << " milliseconds\n";
 
-    //Read commands
-    //read_commands(filename, threads, cores_used, num_cores);
 
     return 0;
 }

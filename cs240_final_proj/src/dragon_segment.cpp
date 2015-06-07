@@ -85,11 +85,11 @@ int dragon_segment::flush_to_disk() {
     struct stat sb;
 
     //If a directory doesn't already exist for the dragon store, make one
-    if (stat(filename.c_str(), &sb) != 0 && !S_ISDIR(sb.st_mode)) {
+    /*if (stat(filename.c_str(), &sb) != 0 && !S_ISDIR(sb.st_mode)) {
         string command = "mkdir " + filename;
         system(command.c_str());
-    }
-    string outfile = filename + "/" + filename + "-" + to_string(core_id) + ".drg";
+    }*/
+    string outfile = filename + "-" + to_string(core_id) + ".drg";
     uint64_t segment_size = 0; //start at 1 for newline after size write
     ofstream fs(outfile.c_str(), ofstream::app);
     write_segment(fs);
@@ -143,7 +143,7 @@ void dragon_segment::write_segment(ofstream &fs) {
  * to roll back until we find a complete segment that we can load.
  */
 int dragon_segment::load_from_disk() {
-    string infile = filename + "/" + filename + "-" + to_string(core_id) + ".drg";
+    string infile = filename + "-" + to_string(core_id) + ".drg";
 
     ifstream is (infile, ios::in);
     cout << "reading from file " << infile << "..." << endl;

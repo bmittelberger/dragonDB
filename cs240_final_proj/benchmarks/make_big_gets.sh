@@ -1,7 +1,7 @@
 #!/bin/bash
 
-MAX=100000
-OUTPUT="../test/big_gets.tst"
+MAX=10000
+OUTPUT="../tests/big_gets.tst"
 rm $OUTPUT
 echo "open dragon_store" > $OUTPUT
 for i in `seq 1 $MAX`

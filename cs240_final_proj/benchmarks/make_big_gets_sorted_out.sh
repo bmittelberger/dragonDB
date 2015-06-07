@@ -1,7 +1,7 @@
 #!/bin/bash
 
-MAX=100000
-OUTPUT="../test/big_gets.out"
+MAX=10000
+OUTPUT="../tests/big_gets.out"
 rm $OUTPUT
 for i in `seq 1 $MAX`
 do 
