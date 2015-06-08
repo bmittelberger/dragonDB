@@ -33,7 +33,7 @@ lab2, you can skip the first 2 steps.
 
 	Then, initialize the virtual machine by issuing the following commands in the lab2 directory:
 
-    ```
+    ```shell
     vagrant up    #this could take 10-15 minutes
     vagrant ssh
     ```
@@ -59,19 +59,21 @@ lab2, you can skip the first 2 steps.
 
 ##Tests/benchmarks:##
 
-  *Scalability Tests*
+  1.) Scalability Tests
 
-	**Large writes:**
+	* Large writes:
+
 	If there are no files in the tests/ directory, navigate to the benchmarks directory and 
 	run `bash make_big_puts.sh`. Then, navigate back to the cs240_final_proj directory and 
 	run `bash test_speed_from_file.sh`. This test will demonstrate the scalability and 
 	speed of our key-value store. 
 
-	**Large reads and writes:**
+	* Large reads and writes:
+
 	Navigate to the `cs_240_final_proj` directory. In src/main.cpp, in the main 
   function around line 350, there are lines: 
 
-    ```
+    ```C
     test(threads, cores_used, num_cores, MIXED);
     test(threads, cores_used, num_cores, R_ONLY);
     test(threads, cores_used, num_cores, STRONG);
@@ -80,12 +82,14 @@ lab2, you can skip the first 2 steps.
     Comment out the second R_ONLY line if you'd like to see the performance of 
     how the database handles a mixed read-and-write workload.
 
-	**Large reads:**
+	* Large reads:
+
 	Navigate to the `cs_240_final_proj` directory, and in src/main.cpp, make
   sure the line test(threads, cores_used, num_cores, R_ONLY) is commented
   in.
 
-  **Durability Tests:**
+  2.) Durability Tests
+
   DragonDB is able to withstand corruptions given a power failure. As each segment
   writes to the database, it writes with a checksum on the data. When loading the most
   recently modified segment back into memory, dragonDB first recomputes the 
@@ -101,7 +105,7 @@ lab2, you can skip the first 2 steps.
         non-corrupted segment.
 
     An example to see/try this out:
-      ```
+      ```shell
       ./dragonDB NUMCORES
       vim no_file-0.drg
       (delete the last line of the file, save and close)
@@ -112,7 +116,8 @@ lab2, you can skip the first 2 steps.
     but the segment will roll back to the most recent uncorrupted segment.
 
 
-  *Consistency Tests:*
+  3.) Consistency Tests:
+
   Our key-value store by default promises eventual consistency. With this design, 
   sometimes the caller may get back old data, but eventually, the most up-to-date 
   data will be flushed and reflected on disk.
@@ -137,7 +142,8 @@ lab2, you can skip the first 2 steps.
 
 
 ##Embeddability## 
-  *** Client-side application using the API ***
+  Client-side application using the API:
+  ---------------------------------------
   There are multiple ways to interact with dragonDB. We created a client-side application
   (main.cpp) that uses the dragonDB API directly. We've designed the application to 
   be user-friendly and take in command-line arguments. The client-side is responsible for 
@@ -155,7 +161,8 @@ lab2, you can skip the first 2 steps.
   that the program manipulated. 
 
 
-  *** Interacting with the Shell ***
+  Interacting with the Shell
+  ---------------------------------------
   To interact with the key-value store and dynamically create/manipulate a 
    key-value store on the fly, from the cs240_final_proj directory, run:
    `./dragonDB NUMTHREADS` (where) NUMTHREADS is the number of threads you'd like
@@ -174,13 +181,13 @@ lab2, you can skip the first 2 steps.
   The client-side application can read in a list of open/puts/get/close commands that 
   the user has already written if the user does not want to type all his commands in shell.
   To see how this works, you can write a command file with the following format:
-    ```
+    ```shell
     open DRAGON_STORE
     puts key val
     close
     ```
   For example, you can write a file called store_commands.tst, 
-    ```
+    ```shell
     open dragon_store
     puts armor 8
     puts space 10
@@ -197,17 +204,19 @@ lab2, you can skip the first 2 steps.
 
   This list of commands will save all of the key-value pairs in dragon_store-*.drg files. 
   It will also output in stdout, 
-    ```
+    ```shell
     armor : 8
     space : 10
     origami : 2
     magic_dragon : 9
     dragon_ball_z : 10
     ```
+
     However, by nature of our design, the order in which these outputs appear will 
     not be guaranteed.
 
- **Commutativity**
+  Commutativity
+  ---------------------------------------
     Key-value pairs are stored across cores. Threads from other cores must be able to 
     interact with them. Each thread receives a process (puts/open/get/close) to execute 
     based on the load and scheduling of the other cores. It is highly unlikely that the 
