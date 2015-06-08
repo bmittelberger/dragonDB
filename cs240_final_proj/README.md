@@ -28,23 +28,23 @@ lab2, you can skip the first 2 steps.
   for running the VM and [Vagrant](https://www.vagrantup.com/downloads.html) for simple VM configuration. 
 
 2. Set up the VM and get the source code on your development machine. You'll need to operate 
-	and issue all your commands from the lab2 directory. 
+  and issue all your commands from the lab2 directory. 
 
-	`git clone https://web.stanford.edu/class/cs240/lab2-skeleton.git lab2`
+  `git clone https://web.stanford.edu/class/cs240/lab2-skeleton.git lab2`
 
-	Then, initialize the virtual machine by issuing the following commands in the lab2 directory:
+  Then, initialize the virtual machine by issuing the following commands in the lab2 directory:
 
     vagrant up    #this could take 10-15 minutes
     vagrant ssh
 
 
-	To put the VM to sleep, you can run `vagrant suspend`. `vagrant up` brings the machine back up. 
-	When/if you're done with the datastore, you can reclaim your resources by issuing `vagrant destroy`. 
-	You must be in the lab2 directory when you run these commands.
+  To put the VM to sleep, you can run `vagrant suspend`. `vagrant up` brings the machine back up. 
+  When/if you're done with the datastore, you can reclaim your resources by issuing `vagrant destroy`. 
+  You must be in the lab2 directory when you run these commands.
 
-	There's a lab2 directory in the VM's home directory, which mirrors the lab2 directory on your local 
-	machine. Any changes you make to a file in either the VM or your local machine will be reflected
-	to the other machine. 
+  There's a lab2 directory in the VM's home directory, which mirrors the lab2 directory on your local 
+  machine. Any changes you make to a file in either the VM or your local machine will be reflected
+  to the other machine. 
 
 3. Clone the dragonDB repository into the lab2 directory on your virtual machine. After ssh'ing into
    your virtual machine, issue the following commands:
@@ -60,28 +60,40 @@ lab2, you can skip the first 2 steps.
 Tests/benchmarks:
 
 1.) Scalability Tests
-	a.) Large writes:
-	If there are no files in the tests/ directory, navigate to the benchmarks directory and 
-	run `bash make_big_puts.sh`. Then, navigate back to the cs240_final_proj directory and 
-	run `bash test_speed_from_file.sh`. This test will demonstrate the scalability and 
-	speed of our key-value store. 
+  a.) Large writes:
+  If there are no files in the tests/ directory, navigate to the benchmarks directory and 
+  run `bash make_big_puts.sh`. Then, navigate back to the cs240_final_proj directory and 
+  run `bash test_speed_from_file.sh`. This test will demonstrate the scalability and 
+  speed of our key-value store. Keep in mind, when the MAX value in make_big_puts.sh
+  is large, the writes tests can take up to an hour.
 
-	b.) Large reads and writes:
-	Navigate to the `cs_240_final_proj` directory. In src/main.cpp, in the main 
-  function around line 350, there are lines: 
+  b.) Large reads and writes:
+  Navigate to the `cs_240_final_proj` directory. In src/main.cpp, in the main 
+  function around line 358, there are lines: 
 
-    `test(threads, cores_used, num_cores, MIXED);`
-    `test(threads, cores_used, num_cores, R_ONLY);`
-    `test(threads, cores_used, num_cores, STRONG);`
+    test(threads, cores_used, num_cores, MIXED);
+    test(threads, cores_used, num_cores, WR_ONLY);
+    test(threads, cores_used, num_cores, R_ONLY);
+    test(threads, cores_used, num_cores, STRONG);
 
-    Comment out the second R_ONLY line if you'd like to see the performance of 
-    how the database handles a mixed read-and-write workload.
+    Comment in the MIXED line if you'd like to see the performance of 
+    how the database handles a mixed read-and-write workload. You can 
+    adjust the number of operations by adjusting the int max parameter
+    in void *mixed_gets_puts_test();
 
-	c.) Large reads:
-	Navigate to the `cs_240_final_proj` directory, and in src/main.cpp, make
-  sure the line test(threads, cores_used, num_cores, R_ONLY) is commented
-  in.
+  c.) Large reads:
+  Before testing the performance of large reads, you need to make sure that 
+  a kv-store is populated with the kv-pairs that you plan to read. To do 
+  this, in src/main.cpp, comment out all lines but 
+  
+  test(threads, cores_used, num_cores, WR_ONLY);
 
+  Then, navigate to the cs240_final_proj directory and run ./dragonDB
+  NUMTHREADS. Once this is done, go back into main, comment out 
+  test(threads, cores_used, num_cores, WR_ONLY);
+  and comment in 
+  test(threads, cores_used, num_cores, R_ONLY);
+  This will give you the total time to conduct reads. 
 
 
 2.) Durability Tests
@@ -105,10 +117,8 @@ Tests/benchmarks:
       (delete the last line of the file, save and close)
       ./dragonDB NUMCORES
 
-    The load indicate that there had previously been a corruption of the data, 
+    The load indicates that there had previously been a corruption of the data, 
     but the segment will roll back to the most recent uncorrupted segment.
-
-
 
 
 3.) Consistency Tests:
@@ -128,11 +138,13 @@ Tests/benchmarks:
   every push.
 
   To compare the performance of strong-consistency to weak-consistency, 
+  make sure that the test(threads, cores_used, num_cores, STRONG);
+  line in src/main.cpp is commented in. Then,
   run the script test_consistency_perf.sh from the cs240_final_proj
   directory. This will output the time it takes 1-4 cores to do 
   10K gets and and puts requests for each model. 
 
-    `./test_consistency_perf.sh`
+    ./test_consistency_perf.sh
 
 --------------------------------------------------------------------------------------------
 
@@ -156,8 +168,6 @@ Embeddability
   that the program manipulated. 
 
 
-
-
 2.) Interacting with the Shell
   To interact with the key-value store and dynamically create/manipulate a 
    key-value store on the fly, from the cs240_final_proj directory, run:
@@ -169,8 +179,8 @@ Embeddability
    `open DATASTORE` (where datastore is the name of your key value store).
     
    The other commands that our dragonDB can understand from the shell are:
-  	* puts key val
-  	* get key    # will return value or an error message indicating that the key does not exist.  
+    * puts key val
+    * get key    # will return value or an error message indicating that the key does not exist.  
 
 
   Storing mass puts/gets from a file
@@ -229,5 +239,17 @@ C++ files:
   * src/main.cpp: The client-side application that calls dragonDB API functions.
                   The client program is in charge of spawning off however many
                   threads it wishes to work with and 
-  * src/dragon_segment.cpp: 
+  
+  * src/dragon_db.cpp: Contains the constructor and destructor for a dragonDB
+                  data store, loads an existing database from memory on intialization,
+                  and sets up all of the data structures to interact with individual
+                  cores. 
+
+  * src/dragon_segment.cpp: The data structures for the dragon_segment and the 
+                  operations that dragon segments call to flush to the disk
+                  or to load from the disk.
+
+  * src/dragon_core.cpp: Handles gets and puts operations across cores. Has code
+                  for the mailbox functionality. Strong consistency is also implemented
+                  here. 
 

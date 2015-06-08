@@ -40,15 +40,13 @@ struct keyval {
 
 
 void* mixed_gets_puts_test(void* args) {    
-    int max = 100000;
+    int max = 100;
     for (int i = 0; i < max ; i++) {
         string key(to_string(i));
         string value(to_string(i));
         db->db_put(key,value);
     }
-    cout << "here" << endl;
     db->flush();
-    cout << "after flush" << endl;
 
     for (int i = 0; i < max ; i++) {
         string key(to_string(i));
@@ -91,16 +89,11 @@ void *gets_test(void* args) {
 
 /* Tests immediate consistency of the KV store. */
 void* strong_consistency_test(void * args) {
-    
     db->set_consistency(true); 
-
-    int max = 1000;
+    int max = 100;
     for (int i = 0; i < max ; i++) {
         string key(to_string(i));
         string value(to_string(i));
-
-        if (i % 100)
-            cout << ".";
 
         db->db_put(key,value);
 
@@ -112,12 +105,13 @@ void* strong_consistency_test(void * args) {
             exit(-1);
         }
     }
-
     cout << endl;
     cout << "strong_consistency_test: PASSED" << endl;
 
     db->set_consistency(false);
 }
+
+
 
 void* put(void* args) {
     keyval *kv;
@@ -203,9 +197,9 @@ void process_lines(pthread_t threads[],
         value = "";
         tu = set_thread(key, value, threads, cores_used, num_cores, GET);
     } else if (command.compare(close) == 0) {
-        for (int i = 0; i < num_cores; i++) {
+        /*for (int i = 0; i < num_cores; i++) {
            pthread_join(threads[i], NULL);
-        }
+        }*/
         tu = set_thread(key, value, threads, cores_used, num_cores, CLOSE);
     } else {
         cout << "Invalid command\n";
@@ -360,19 +354,21 @@ int main(int argc, const char * argv[]) {
     pthread_t threads[num_cores];
     int cores_used[num_cores];
 
-    test(threads, cores_used, num_cores, MIXED);
+    if(!strong_consistency){
+        test(threads, cores_used, num_cores, MIXED);
+    } else {
+        test(threads, cores_used, num_cores, STRONG);
+    }
     //test(threads, cores_used, num_cores, WR_ONLY);
     //test(threads, cores_used, num_cores, R_ONLY);
-    //test(threads, cores_used, num_cores, STRONG);
 
 
     //Read commands from file or command line
-    /*uint64_t start = db->get_time();
-    read_commands(filename, threads, cores_used, num_cores);
+    uint64_t start = db->get_time();
+    //read_commands(filename, threads, cores_used, num_cores);
     uint64_t end = db->get_time();
     uint64_t time_elapsed = (end - start)/num_cores;
-    cout << num_cores << " threads : " << time_elapsed << " milliseconds\n";
-    */
+    //cout << num_cores << " threads : " << time_elapsed << " milliseconds\n";
 
     return 0;
 }

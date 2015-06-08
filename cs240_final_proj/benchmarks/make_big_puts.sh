@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MAX=100000
+MAX=1000
 OUTPUT="../tests/big_puts.tst"
 rm $OUTPUT
 echo "open dragon_store" > $OUTPUT
