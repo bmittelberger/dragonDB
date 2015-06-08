@@ -129,7 +129,7 @@ void *get(void* args) {
     if (val.compare(malformed) == 0) {
         cout << "KEY DOES NOT EXIST\n";
     } else {
-        cout << kv->key << ": " << val << endl;
+        cout << kv->key << " : " << val << endl;
     }
 }
 
@@ -354,18 +354,18 @@ int main(int argc, const char * argv[]) {
     pthread_t threads[num_cores];
     int cores_used[num_cores];
 
-    if(!strong_consistency){
+    /*if(!strong_consistency){
         test(threads, cores_used, num_cores, MIXED);
     } else {
         test(threads, cores_used, num_cores, STRONG);
-    }
+    }*/
     //test(threads, cores_used, num_cores, WR_ONLY);
     //test(threads, cores_used, num_cores, R_ONLY);
 
 
     //Read commands from file or command line
     uint64_t start = db->get_time();
-    //read_commands(filename, threads, cores_used, num_cores);
+    read_commands(filename, threads, cores_used, num_cores);
     uint64_t end = db->get_time();
     uint64_t time_elapsed = (end - start)/num_cores;
     //cout << num_cores << " threads : " << time_elapsed << " milliseconds\n";
