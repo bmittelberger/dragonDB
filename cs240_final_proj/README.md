@@ -33,8 +33,7 @@ lab2, you can skip the first 2 steps.
 
 	Then, initialize the virtual machine by issuing the following commands in the lab2 directory:
 
-    ```
-    vagrant up    #this could take 10-15 minutes
+    ```vagrant up    #this could take 10-15 minutes
     vagrant ssh
     ```
 
@@ -48,8 +47,7 @@ lab2, you can skip the first 2 steps.
 
 3. Clone the dragonDB repository into the lab2 directory on your virtual machine. After ssh'ing into
    your virtual machine, issue the following commands:
-     ```
-     cd lab2
+     ```cd lab2
      git clone https://github.com/bmittelberger/dragonDB
      cd dragonDB/cs240_final_proj
      make
@@ -60,18 +58,18 @@ lab2, you can skip the first 2 steps.
 ## Tests/benchmarks: ##
 
   *Scalability Tests*
+
 	**Large writes:**
 	If there are no files in the tests/ directory, navigate to the benchmarks directory and 
 	run `bash make_big_puts.sh`. Then, navigate back to the cs240_final_proj directory and 
 	run `bash test_speed_from_file.sh`. This test will demonstrate the scalability and 
 	speed of our key-value store. 
 
-	**Large reads and writes:**
+	* Large reads and writes:*
 	Navigate to the `cs_240_final_proj` directory. In src/main.cpp, in the main 
   function around line 350, there are lines: 
 
-    ```
-    test(threads, cores_used, num_cores, MIXED);
+    ```test(threads, cores_used, num_cores, MIXED);
     test(threads, cores_used, num_cores, R_ONLY);
     test(threads, cores_used, num_cores, STRONG);
     ```
@@ -100,8 +98,7 @@ lab2, you can skip the first 2 steps.
         non-corrupted segment.
 
     An example to see/try this out:
-      ```
-      ./dragonDB NUMCORES
+      ```./dragonDB NUMCORES
       vim no_file-0.drg
       (delete the last line of the file, save and close)
       ./dragonDB NUMCORES
@@ -165,24 +162,20 @@ lab2, you can skip the first 2 steps.
    `open DATASTORE` (where datastore is the name of your key value store).
     
    The other commands that our dragonDB can understand from the shell are:
-     ```
   	* puts key val
   	* get key    # will return value or an error message indicating that the key does not exist.  
-    ```
+
 
   *** Storing mass puts/gets from a file ***
   The client-side application can read in a list of open/puts/get/close commands that 
   the user has already written if the user does not want to type all his commands in shell.
   To see how this works, you can write a command file with the following format:
-    ```
-    open DRAGON_STORE
+    ```open DRAGON_STORE
     puts key val
     close
     ```
   For example, you can write a file called store_commands.tst, 
-
-    ```
-    open dragon_store
+    ```open dragon_store
     puts armor 8
     puts space 10
     puts origami 2
@@ -198,8 +191,7 @@ lab2, you can skip the first 2 steps.
 
   This list of commands will save all of the key-value pairs in dragon_store-*.drg files. 
   It will also output in stdout, 
-    ```
-    armor : 8
+    ```armor : 8
     space : 10
     origami : 2
     magic_dragon : 9
