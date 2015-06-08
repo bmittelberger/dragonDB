@@ -9,7 +9,7 @@ Project done with:
   * Evan Shieh (https://github.com/eshieh)
   * Claudia Roberts (https://github.com/chicacvr)
 
-## Setup ##
+##Setup##
 
 Disclaimer: Much of this is from the Lab2 setup instructions. If you've already set up
 lab2, you can skip the first 2 steps.
@@ -33,7 +33,8 @@ lab2, you can skip the first 2 steps.
 
 	Then, initialize the virtual machine by issuing the following commands in the lab2 directory:
 
-    ```vagrant up    #this could take 10-15 minutes
+    ```
+    vagrant up    #this could take 10-15 minutes
     vagrant ssh
     ```
 
@@ -47,7 +48,8 @@ lab2, you can skip the first 2 steps.
 
 3. Clone the dragonDB repository into the lab2 directory on your virtual machine. After ssh'ing into
    your virtual machine, issue the following commands:
-     ```cd lab2
+     ```shell
+     cd lab2
      git clone https://github.com/bmittelberger/dragonDB
      cd dragonDB/cs240_final_proj
      make
@@ -55,7 +57,7 @@ lab2, you can skip the first 2 steps.
 
    This will generate the dragonDB executable.
 
-## Tests/benchmarks: ##
+##Tests/benchmarks:##
 
   *Scalability Tests*
 
@@ -65,11 +67,12 @@ lab2, you can skip the first 2 steps.
 	run `bash test_speed_from_file.sh`. This test will demonstrate the scalability and 
 	speed of our key-value store. 
 
-	* Large reads and writes:*
+	**Large reads and writes:**
 	Navigate to the `cs_240_final_proj` directory. In src/main.cpp, in the main 
   function around line 350, there are lines: 
 
-    ```test(threads, cores_used, num_cores, MIXED);
+    ```
+    test(threads, cores_used, num_cores, MIXED);
     test(threads, cores_used, num_cores, R_ONLY);
     test(threads, cores_used, num_cores, STRONG);
     ```
@@ -82,7 +85,7 @@ lab2, you can skip the first 2 steps.
   sure the line test(threads, cores_used, num_cores, R_ONLY) is commented
   in.
 
-  *Durability Tests:*
+  **Durability Tests:**
   DragonDB is able to withstand corruptions given a power failure. As each segment
   writes to the database, it writes with a checksum on the data. When loading the most
   recently modified segment back into memory, dragonDB first recomputes the 
@@ -98,7 +101,8 @@ lab2, you can skip the first 2 steps.
         non-corrupted segment.
 
     An example to see/try this out:
-      ```./dragonDB NUMCORES
+      ```
+      ./dragonDB NUMCORES
       vim no_file-0.drg
       (delete the last line of the file, save and close)
       ./dragonDB NUMCORES
@@ -132,7 +136,7 @@ lab2, you can skip the first 2 steps.
     `./test_consistency_perf.sh`
 
 
-## Embeddability ## 
+##Embeddability## 
   *** Client-side application using the API ***
   There are multiple ways to interact with dragonDB. We created a client-side application
   (main.cpp) that uses the dragonDB API directly. We've designed the application to 
@@ -170,12 +174,14 @@ lab2, you can skip the first 2 steps.
   The client-side application can read in a list of open/puts/get/close commands that 
   the user has already written if the user does not want to type all his commands in shell.
   To see how this works, you can write a command file with the following format:
-    ```open DRAGON_STORE
+    ```
+    open DRAGON_STORE
     puts key val
     close
     ```
   For example, you can write a file called store_commands.tst, 
-    ```open dragon_store
+    ```
+    open dragon_store
     puts armor 8
     puts space 10
     puts origami 2
@@ -191,7 +197,8 @@ lab2, you can skip the first 2 steps.
 
   This list of commands will save all of the key-value pairs in dragon_store-*.drg files. 
   It will also output in stdout, 
-    ```armor : 8
+    ```
+    armor : 8
     space : 10
     origami : 2
     magic_dragon : 9
@@ -200,7 +207,7 @@ lab2, you can skip the first 2 steps.
     However, by nature of our design, the order in which these outputs appear will 
     not be guaranteed.
 
- * Commutativity *
+ **Commutativity**
     Key-value pairs are stored across cores. Threads from other cores must be able to 
     interact with them. Each thread receives a process (puts/open/get/close) to execute 
     based on the load and scheduling of the other cores. It is highly unlikely that the 
@@ -211,7 +218,7 @@ lab2, you can skip the first 2 steps.
     memory accesses are conflict-free.
 
 
-## Repository Contents ##
+##Repository Contents##
 
 Header file:
   * include/dragonDB.h: Main interface to the DB: Start here
