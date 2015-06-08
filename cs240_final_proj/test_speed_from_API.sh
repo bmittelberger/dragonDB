@@ -1,10 +1,10 @@
-
 #!/bin/bash
+FILENAMES="no_file-*"
 ./dragonDB 1
-rm -rf no_file/
+rm -rf $FILENAMES
 ./dragonDB 2
-rm -rf no_file/
+rm -rf $FILENAMES
 ./dragonDB 3
-rm -rf no_file/
+rm -rf $FILENAMES
 ./dragonDB 4
-rm -rf no_file/
+rm -rf $FILENAMES

@@ -46,8 +46,9 @@ void* mixed_gets_puts_test(void* args) {
         string value(to_string(i));
         db->db_put(key,value);
     }
-
+    cout << "here" << endl;
     db->flush();
+    cout << "after flush" << endl;
 
     for (int i = 0; i < max ; i++) {
         string key(to_string(i));
@@ -64,7 +65,7 @@ void* mixed_gets_puts_test(void* args) {
 
 
 void* puts_test(void* args) {    
-    int max = 100000;
+    int max = 10000;
     for (int i = 0; i < max ; i++) {
         string key(to_string(i));
         string value(to_string(i));
@@ -75,7 +76,7 @@ void* puts_test(void* args) {
 
 
 void *gets_test(void* args) {
-    int max = 100000;
+    int max = 10000;
     for (int i = 0; i < max ; i++) {
         string key(to_string(i));
         string val = db->db_get(key);
@@ -332,7 +333,19 @@ int main(int argc, const char * argv[]) {
     } 
     if (argc > 2) {
         filename = argv[2];
+        if (filename.compare("-STRONG") == 0) {
+            filename = "";
+        }
     }
+    int strong_consistency = 0;
+    string arg = "";
+    for (int i =0; i< argc; i++) {
+        arg = argv[i];
+        if (arg.compare("-STRONG") == 0) {
+            strong_consistency = 1;
+        }
+    }
+
 
     const int num_cores = nc;    
     
@@ -342,24 +355,24 @@ int main(int argc, const char * argv[]) {
     	exit(0);
     }
     
-    //db = new dragon_db("no_file", num_cores);
+    db = new dragon_db("no_file", num_cores);
     //Create threads for each core
     pthread_t threads[num_cores];
     int cores_used[num_cores];
 
-    //test(threads, cores_used, num_cores, MIXED);
+    test(threads, cores_used, num_cores, MIXED);
     //test(threads, cores_used, num_cores, WR_ONLY);
     //test(threads, cores_used, num_cores, R_ONLY);
     //test(threads, cores_used, num_cores, STRONG);
 
 
     //Read commands from file or command line
-    uint64_t start = db->get_time();
+    /*uint64_t start = db->get_time();
     read_commands(filename, threads, cores_used, num_cores);
     uint64_t end = db->get_time();
     uint64_t time_elapsed = (end - start)/num_cores;
     cout << num_cores << " threads : " << time_elapsed << " milliseconds\n";
-    
+    */
 
     return 0;
 }
