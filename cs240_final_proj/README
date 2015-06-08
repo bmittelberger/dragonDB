@@ -62,10 +62,28 @@ Tests/benchmarks:
 1.) Scalability Tests
   a.) Large writes:
   If there are no files in the tests/ directory, navigate to the benchmarks directory and 
-  run `bash make_big_puts.sh`. Then, navigate back to the cs240_final_proj directory and 
-  run `bash test_speed_from_file.sh`. This test will demonstrate the scalability and 
-  speed of our key-value store. Keep in mind, when the MAX value in make_big_puts.sh
-  is large, the writes tests can take up to an hour.
+  run `bash make_big_puts.sh`. Then, navigate back to the cs240_final_proj directory. 
+  In src/main.cpp make sure that the following lines are commented in in the main function:
+
+    uint64_t start = db->get_time();
+    read_commands(filename, threads, cores_used, num_cores);
+    uint64_t end = db->get_time();
+    uint64_t time_elapsed = (end - start)/num_cores;
+    cout << num_cores << " threads : " << time_elapsed << " milliseconds\n";
+
+  Then, you run: 
+    make
+    ./dragonDB NUMTHREADS tests/big_puts.tst
+
+  This will print the time it takes (in ms) for the test to complete. 
+  To compare it with the performance of other cores: run 
+
+    rm *.drg
+
+    and then run ./dragonDB with a different number of cores on the same input
+
+  Keep in mind, when the MAX value in make_big_puts.sh is large, the writes tests can take 
+  up to an hour.
 
   b.) Large reads and writes:
   Navigate to the `cs_240_final_proj` directory. In src/main.cpp, in the main 
@@ -76,10 +94,11 @@ Tests/benchmarks:
     test(threads, cores_used, num_cores, R_ONLY);
     test(threads, cores_used, num_cores, STRONG);
 
-    Comment in the MIXED line if you'd like to see the performance of 
-    how the database handles a mixed read-and-write workload. You can 
-    adjust the number of operations by adjusting the int max parameter
-    in void *mixed_gets_puts_test();
+    Comment out the read_commands line that may have been commented in for 
+    the large_writes test. Comment in the MIXED line if you'd like to see 
+    the performance of how the database handles a mixed read-and-write 
+    workload. You can adjust the number of operations by adjusting the 
+    int max parameter in void *mixed_gets_puts_test();
 
   c.) Large reads:
   Before testing the performance of large reads, you need to make sure that 
@@ -138,13 +157,21 @@ Tests/benchmarks:
   every push.
 
   To compare the performance of strong-consistency to weak-consistency, 
-  make sure that the test(threads, cores_used, num_cores, STRONG);
-  line in src/main.cpp is commented in. Then,
-  run the script test_consistency_perf.sh from the cs240_final_proj
-  directory. This will output the time it takes 1-4 cores to do 
-  10K gets and and puts requests for each model. 
+  comment in the following block in main.cpp:
 
-    ./test_consistency_perf.sh
+    if(!strong_consistency){
+        test(threads, cores_used, num_cores, MIXED);
+    } else {
+        test(threads, cores_used, num_cores, STRONG);
+    }
+
+  Then, run the script test_consistency_perf.sh from the cs240_final_proj
+  directory. This will output the time it takes 1-4 cores to do 
+  100 gets and and puts requests for each model. If you'd like to change 
+  this value, navigate to the mixed_gets_and_puts function in main.cpp 
+  and change the int max value.
+
+    bash test_consistency_perf.sh
 
 --------------------------------------------------------------------------------------------
 

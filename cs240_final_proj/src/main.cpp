@@ -26,6 +26,7 @@
 
 #define STRONG 7
 
+int tst_file_specified = 0;
 using namespace std;
 
 uint64_t start;
@@ -117,7 +118,7 @@ void* put(void* args) {
     keyval *kv;
     kv = (keyval *)args;
     db->db_put(kv->key, kv->value);
-    //db->flush();
+    db->flush();
 }
 
 
@@ -223,6 +224,9 @@ void read_file(string line, pthread_t threads[],
         iss >> command;
         store_name = command;
         db = new dragon_db(command.c_str(), num_cores);
+        if(!tst_file_specified){
+            db->set_consistency(true); 
+        }
     } else {
         process_lines(threads, cores_used, num_cores, line);
     }
@@ -247,6 +251,7 @@ void read_commands(string filename, pthread_t threads[],
         }
         db->close();
     } else {
+        tst_file_specified = 1;
         ifstream myfile(filename);
         if (myfile) {
             while (getline( myfile, line )) {
